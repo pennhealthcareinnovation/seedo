@@ -1,0 +1,25 @@
+# Override the standard production docker-compose.yml with local development settings
+# https://docs.docker.com/compose/extends/#multiple-compose-files
+
+version: '3.8'
+services:
+  server:
+    image: seedo/server:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+      - 9229:9229
+    env_file:
+      - ./.env
+    volumes:
+      # - /server/node_modules
+      - .:/server
+    tty: true
+    stdin_open: true
+    command: sh -c "npm run start:debug" # override the container's start command and run in debug mode
+
+networks:
+  default:
+    driver: bridge
