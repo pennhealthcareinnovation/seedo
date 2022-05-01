@@ -1,17 +1,20 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { sub } from 'date-fns'
 
 import { ClarityService } from './external-api/clarity/clarity.service';
 import { MedhubService } from './external-api/medhub/medhub.service';
+import { ProgramService } from './program/program.service';
 import { TasksService } from './tasks/tasks.service';
-
+import { TraineeService } from './trainee/trainee.service';
 
 @Controller()
 export class AppController {
   constructor(
     private clarityService: ClarityService,
     private medhubService: MedhubService,
-    private tasksService: TasksService
+    private tasksService: TasksService,
+    private programService: ProgramService,
+    private traineeService: TraineeService,
   ) {}
 
   @Get()
@@ -25,12 +28,15 @@ export class AppController {
     return result
   }
 
-  @Get('test-medhub')
-  async testMedhub() {
-    const test = await this.medhubService.request({
-      endpoint: `info/test`
-    })
-    console.debug(test)
-    return test
+  @Get('reload-programs')
+  async reloadPrograms() {
+    return await this.programService.reloadPrograms()
+  }
+
+  @Get('load-program-trainees')
+  async loadProgramTrainees(
+    @Query('programID') programID: string,
+  ) {
+    return await this.traineeService.reloadProgramTrainees(programID)
   }
 }

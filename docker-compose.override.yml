@@ -19,6 +19,15 @@ services:
     tty: true
     stdin_open: true
     command: sh -c "npm run start:debug" # override the container's start command and run in debug mode
+  
+  database:
+    image: postgres:14.2
+    ports: 
+      - 5432:5432
+    env_file:
+      - ./.env
+    tty: true
+    stdin_open: true
 
 networks:
   default:

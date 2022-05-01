@@ -29,7 +29,7 @@ export class MedhubService {
       }
   }
 
-  async request({ endpoint, request }: { endpoint: string, request?: string }) {
+  async request({ endpoint, request }: { endpoint: string, request?: any }) {
     const ts = getUnixTime(new Date())
     const verify = this.verifcationHash(request, ts)
 
@@ -56,7 +56,7 @@ export class MedhubService {
     let verificationString = `${this.config.client_id}|${ts}|${this.config.private_key}|`
 
     if (request)
-        verificationString += request
+      verificationString += JSON.stringify(request)
 
     return crypto.createHash('sha256').update(verificationString).digest('hex')
   }
@@ -64,5 +64,11 @@ export class MedhubService {
 
   logPatientProcedure({ log, procedures }: LogPatientProcedure) {
 
+  }
+
+  getPrograms() {
+    this.request({
+      endpoint: 'programs/all'
+    })
   }
 }

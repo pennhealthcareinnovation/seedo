@@ -1,15 +1,17 @@
-FROM node:16.13-alpine3.13 AS builder
+FROM node:16.14 AS builder
 LABEL maintainer="Emeka C. Anyanwu, Center for Healthcare Innovation, Penn Medicine"
 
-# git, openssh - dependencies for NPM
-RUN apk --no-cache add git openssh
-RUN npm install -g npm@6
+# git - dependency for NPM
+RUN apt update && apt install -yq git && apt clean
+RUN npm install -g npm@8.5.0
+
+USER node
 
 WORKDIR /server
-COPY package*.json ./
+COPY --chown=node:node package*.json ./
 RUN npm ci
 
-COPY . .
+COPY --chown=node:node . .
 
 WORKDIR /server
 
