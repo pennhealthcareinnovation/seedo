@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model programs {
+  id        Int        @id @default(autoincrement())
+  programID String     @unique(map: "programs_programid_unique") @db.VarChar(255)
+  name      String     @db.VarChar(255)
+  data      Json
+  createdAt DateTime   @db.Timestamptz(6) @default(now())
+  updatedAt DateTime   @db.Timestamptz(6) @updatedAt
+  trainees  trainees[]
+}
+
+model trainees {
+  id              Int      @id @default(autoincrement())
+  medhubUserId    String   @unique(map: "trainees_medhubuserid_unique") @db.VarChar(255)
+  medhubProgramId String   @db.VarChar(255)
+  pennId          String   @unique(map: "trainees_pennid_unique") @db.VarChar(255)
+  lastName        String?  @db.VarChar(255)
+  firstName       String?  @db.VarChar(255)
+  data            Json?
+  createdAt       DateTime @db.Timestamptz(6) @default(now())
+  updatedAt       DateTime @db.Timestamptz(6) @updatedAt
+  
+  programs        programs @relation(fields: [medhubProgramId], references: [programID], map: "trainees_medhubprogramid_foreign")
+  observations    observations[]
+  ehrMetadata     traineesEhrMetadata?
+}
+
+model traineesEhrMetadata {
+  id              Int       @id @default(autoincrement())
+  traineeId       Int
+  data            Json?
+  trainee         trainees  @relation(fields: [traineeId], references: [id], map: "traineesehrmetadata_traineeid_foreign")
+}
+
+model observations {
+  id              Int       @id @default(autoincrement())
+  traineeId       Int
+  
+  // A unique EHR identifier for this event (i.e. CSN, note id, procedure identifier, etc.)
+  ehrObservationId String   @db.VarChar(18)
+  
+  type            String    @db.VarChar(255)
+  date            DateTime  @db.Timestamptz(6)
+  patientId       String    @db.VarChar(18)
+  data            Json?
+  createdAt       DateTime @db.Timestamptz(6) @default(now())
+  updatedAt       DateTime @db.Timestamptz(6) @updatedAt
+  
+  trainee         trainees  @relation(fields: [traineeId], references: [id], map: "observations_traineeid_foreign")
+
+  @@unique([traineeId, ehrObservationId])
+}

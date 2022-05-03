@@ -4,7 +4,7 @@ services:
     image: uphschcich.azurecr.io.azurecr.io/seedo:main
     build: 
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./server/Dockerfile
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
     env_file:

@@ -8,5 +8,4 @@
 npm-debug.log
 configs.js*
 
-build
-built
+**/dist/*

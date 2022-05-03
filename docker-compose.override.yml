@@ -7,7 +7,7 @@ services:
     image: seedo/server:latest
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./server/Dockerfile
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
       - 9229:9229
@@ -15,7 +15,7 @@ services:
       - ./.env
     volumes:
       # - /server/node_modules
-      - .:/server
+      - .:/app
     tty: true
     stdin_open: true
     command: sh -c "npm run start:debug" # override the container's start command and run in debug mode
