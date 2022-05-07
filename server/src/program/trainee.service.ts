@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { ClarityService } from 'src/external-api/clarity/clarity.service';
 
+import { ClarityService } from '../external-api/clarity/clarity.service';
 import { MedhubService } from '../external-api/medhub/medhub.service';
 import { PrismaService } from '../prisma/prisma.service';
 

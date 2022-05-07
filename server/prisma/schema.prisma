@@ -12,9 +12,11 @@ model programs {
   programID String     @unique(map: "programs_programid_unique") @db.VarChar(255)
   name      String     @db.VarChar(255)
   data      Json
+  procedureTypes Json?
   createdAt DateTime   @db.Timestamptz(6) @default(now())
   updatedAt DateTime   @db.Timestamptz(6) @updatedAt
   trainees  trainees[]
+  tasks tasks[]
 }
 
 model trainees {
@@ -44,7 +46,10 @@ model observations {
   id              Int       @id @default(autoincrement())
   traineeId       Int
   
-  // A unique EHR identifier for this event (i.e. CSN, note id, procedure identifier, etc.)
+  // the task that created this observation
+  taskId          Int
+  
+  // A unique EHR identifier for this event (i.e. CSN, accession, note id, procedure identifier, etc.)
   ehrObservationId String   @db.VarChar(18)
   
   type            String    @db.VarChar(255)
@@ -53,8 +58,24 @@ model observations {
   data            Json?
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt
+
+  // Metadata for sync to medhub
+  syncId          String?   @unique() @db.VarChar(255)
+  syncedAt        DateTime? @db.Timestamptz(6)
   
-  trainee         trainees  @relation(fields: [traineeId], references: [id], map: "observations_traineeid_foreign")
+  trainee         trainees  @relation(fields: [traineeId], references: [id])
+  task            tasks     @relation(fields: [taskId], references: [id])
 
   @@unique([traineeId, ehrObservationId])
+}
+
+model tasks {
+  id                  Int       @id @default(autoincrement())
+  programId           Int
+  medhubProcedureId   String    @db.VarChar(255)
+  observableType      String    @db.VarChar(255)
+  args                Json?
+
+  program             programs  @relation(fields: [programId], references: [id])
+  observations        observations[]
 }

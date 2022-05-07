@@ -18,9 +18,11 @@ export class AppController {
     return 'ok'
   }
 
-  @Get('cardiology-tasks')
-  async getEchos() {
-    const result = await this.tasksService.cardiology()
+  @Get('run-task')
+  async getEchos(
+    @Query('id') id: number,
+  ) {
+    const result = await this.tasksService.runCollectionTask(id)
     return result
   }
 }

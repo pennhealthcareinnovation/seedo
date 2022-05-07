@@ -2,7 +2,7 @@ interface ProcedureLog {
   logID?: number
   
   /** The trainee that the procedure log belongs to */
-  userID: number
+  userID: number | string
 
   /** Date the pocedures ocurred on */
   date: Date
@@ -24,7 +24,7 @@ interface ProcedureLog {
 
 interface Procedure {
   logID?: number,
-  typeID: number,
+  typeID: number | string,
   role: number,
   quantity: number
 }

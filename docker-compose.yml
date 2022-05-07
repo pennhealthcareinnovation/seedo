@@ -5,6 +5,7 @@ services:
     build: 
       context: .
       dockerfile: ./server/Dockerfile
+      target: production
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
     env_file:

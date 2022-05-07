@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { differenceInYears, sub } from 'date-fns';
 
 import { ObservableService } from '../observe/observable.service';
-import { ObservableTypes } from '../observe/observables';
+import { ObservablesDefinitions } from '../observe/observables';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClarityService } from '../external-api/clarity/clarity.service';
 import { MedhubService } from '../external-api/medhub/medhub.service';
+import { differenceInYears } from 'date-fns';
 
 @Injectable()
 export class TasksService {
@@ -17,38 +17,99 @@ export class TasksService {
     private prismaService: PrismaService,
   ) {}
 
-  async cardiology() {
-    const program = await this.prismaService.programs.findUnique({ 
-      where: { programID: '166' },
+  async syncObservations() {
+    const observations = await this.prismaService.observations.findMany({
+      where: { syncId: undefined },
       include: {
-        trainees: {
-          include: {
-            ehrMetadata: true,
+        trainee: true,
+        task: true
+      }
+    })
+
+    const synced = await Promise.all(observations.slice(0,5).map(async obs => {
+      const log: ProcedureLog = {
+        userID: obs.trainee.medhubUserId,
+        date: obs.date,
+        fields: {
+          patientID: obs.patientId,
+          patient_age: differenceInYears((obs.data as any)?.patientBirthDate, new Date()),
+          patient_gender: (obs.data as any)?.patientGender
+        }
+      }
+      const logResult = await this.medhubService.request({
+        endpoint: 'procedures/record',
+        request: log
+      })
+
+      const procedure: Procedure = {
+        logID: logResult.logID,
+        typeID: obs.task.medhubProcedureId,
+        quantity: 1,
+        role: 1
+      }
+      const appendProcedure = await this.medhubService.request({
+        endpoint: 'procedures/appendProcedure',
+        request: procedure
+      })
+      return {
+        observationId: obs.id,
+        logID: logResult.logID,
+        procedureID: appendProcedure.procedureID
+      }
+    }))
+
+    const update = await this.prismaService.$transaction(
+      synced.map(({ observationId, logID, procedureID }) =>
+        this.prismaService.observations.update({
+          where: { id: observationId },
+          data: {
+            syncId: procedureID.toString(),
+            syncedAt: new Date(),
+          }
+        })
+      )
+    )
+
+    return update
+  }
+
+  /** Run an assigned task to collect observations for each trainee in a program */
+  async runCollectionTask(id: number) {
+    const task = await this.prismaService.tasks.findUnique({ 
+      where: { id },
+      include: {
+        program: {
+          include: { 
+            trainees: {
+              include: {
+                ehrMetadata: true 
+              }
+            }
           }
         }
       }
     })
-    const trainees = program.trainees
 
-    const echos = await this.observableService.run<ObservableTypes.cardiology.echos>({
-      category: 'cardiology',
-      name: 'echos',
-      args: {
-        startDate: sub(new Date(), { days: 7 }),
-        endDate: new Date(),
-      }
+    if (!ObservablesDefinitions?.[task.observableType])
+      throw new Error(`Unknown observable type: ${task.observableType}`)
+
+    const trainees = task.program.trainees
+    const observables = await this.observableService.run({
+      type: task.observableType,
+      args: task.args
     })
 
     /** Create observations */
     trainees.forEach(async trainee => {
-      const traineeEchos = echos.filter(echo => echo.prelimUserId === (trainee.ehrMetadata.data as any).user_id)
-      const newObservations = traineeEchos.map(echo => ({
+      const traineeObs = observables.filter(obs => obs.providerIdentifier === (trainee.ehrMetadata.data as any).user_id)
+      const newObservations = traineeObs.map(obs => ({
+        type: task.observableType,
         traineeId: trainee.id,
-        type: 'echo',
-        date: echo.resultTime,
-        patientId: echo.uid,
-        ehrObservationId: echo.accessionNum,
-        data: echo as any
+        date: obs.procedureDate,
+        patientId: obs.patientIdentifier,
+        ehrObservationId: obs.proceedureIdentifier,
+        taskId: task.id,
+        data: obs as any
       }))
 
       await this.prismaService.$transaction(
@@ -66,42 +127,6 @@ export class TasksService {
         )
       )
     })
-
-    // trainees.forEach(trainee => {
-    //   const traineeEchos = echos.filter(e => e.prelimUserId === trainee.epicUserId)
-      
-      // traineeEchos.slice(0,1).forEach(async echo => {
-      //   const log: ProcedureLog = {
-      //     userID: trainee.medhubUserId,
-      //     date: echo.RESULT_TIME,
-      //     fields: {
-      //       patientID: echo.uid,
-      //       patient_gender: echo.gender,          
-      //       patient_age: differenceInYears(new Date, new Date(echo.BIRTH_DATE))
-      //     }
-      //   }
-
-      //   const logResult = await this.medhubService.request({
-      //     endpoint: 'procedures/record',
-      //     request: JSON.stringify(log)
-      //   })
-      //   this.logger.debug(`Procedure record: ${logResult}`)
-
-      //   const procedure: Procedure = {
-      //     logID: logResult.logID,
-      //     typeID: 1796,
-      //     quantity: 1,
-      //     role: 1
-      //   }
-
-      //   const appendProcedure = await this.medhubService.request({
-      //     endpoint: 'procedures/appendProcedure',
-      //     request: JSON.stringify(procedure)
-      //   })
-      //   this.logger.debug(`Procedure append: ${appendProcedure}`)
-
-      // })
-    // })
 
     return 'OK'
   }

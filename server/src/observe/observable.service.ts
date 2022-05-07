@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { observable } from 'rxjs';
-import { ClarityService } from 'src/external-api/clarity/clarity.service';
-import { ObservablesDefinitions } from './observables';
+import { ClarityService } from '../external-api/clarity/clarity.service';
+import { ObservableQueryResult, ObservablesDefinitions } from './observables';
 
 @Injectable()
 export class ObservableService {
@@ -16,10 +16,8 @@ export class ObservableService {
     /** Load observable definitions */
     try {
       this.observables = ObservablesDefinitions
-      Object.entries(this.observables).forEach(([category, tree]) => {
-        Object.entries(tree).forEach(([slug, definition]) => {
-          this.observables[category][slug]['query'] = readFileSync(resolve(__dirname, `observables/${category}/${slug}.sql`)).toString()
-        })
+      Object.entries(this.observables).forEach(([type, tree]) => {
+        this.observables[type]['query'] = readFileSync(resolve(__dirname, `observables/${type}.sql`)).toString()
       })
     }
     catch (e) {
@@ -27,12 +25,16 @@ export class ObservableService {
     }
   }
 
-  async run<ReturnType> ({ category, name, args}: { category: string, name: string, args: any }) {
-    const observable = this.observables?.[category]?.[name]
+  async run ({ type, args}: { type: string, args: any }) {
+    const observable = this.observables?.[type]
     const result = await this.clarityService.query({
       query: observable.query,
       vars: observable.varsFactory(args)
     })
-    return result as ReturnType[]
+    return result as ObservableQueryResult[]
+  }
+
+  async syncObservations({ trainee }) {
+
   }
 }

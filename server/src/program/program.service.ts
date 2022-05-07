@@ -12,18 +12,34 @@ export class ProgramService {
   ) {}
   
   /**
-   * Pull and upsert programs from MedHub
+   * Pull and upsert programs from MedHub with their procedureTypes
    */
   async reloadPrograms() {
     const result = await this.medhubService.request({
       endpoint: 'programs/all'
     })
 
-    const newPrograms = result.map((program): Prisma.programsCreateInput => ({
+    let newPrograms = result.map((program): Prisma.programsCreateInput => ({
         programID: program.programID,
         name: program.program_name,
         data: program,
     }))
+
+    /** load procedureTYpes for each program */
+    const procedureTypes = await Promise.all(
+      newPrograms.map(async program => ({
+        programID: program.programID, 
+        procedureTypes: await this.medhubService.request({
+          endpoint: 'procedures/procedureTypes',
+          request: { programID: program.programID }
+        })
+      }))
+    )
+
+    newPrograms = newPrograms.map(program => {
+      program.procedureTypes = procedureTypes.find(procedureType => procedureType.programID === program.programID).procedureTypes
+      return program
+    })
 
     await this.prismaService.$transaction(
       newPrograms.map(program => 

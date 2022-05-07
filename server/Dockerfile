@@ -1,4 +1,5 @@
-FROM node:16.14 AS builder
+# DEVELOPMENT IMAGE
+FROM node:16.14 AS development
 LABEL maintainer="Emeka C. Anyanwu, Center for Healthcare Innovation, Penn Medicine"
 
 # git - dependency for NPM
@@ -19,4 +20,12 @@ COPY --chown=node:node server/* .
 
 RUN npm run prisma:generate && npm run build
 
+CMD ["npm", "run", "start:debug"]
+
+# PRODUCTION IMAGE
+FROM node:16.14 AS production
+RUN npm install -g npm@8.5.0
+USER node
+COPY --chown=node:node --from=development /app /app
+RUN npm prune --production
 CMD ["npm", "run", "start:prod"]
