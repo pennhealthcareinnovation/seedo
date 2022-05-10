@@ -1,6 +1,11 @@
-import { AdminModule } from '@adminjs/nestjs';
+import { AdminModule, AdminModuleOptions } from '@adminjs/nestjs';
 import { DMMFClass } from '@prisma/client/runtime';
-import { ActionResponse } from 'adminjs';
+import AdminJS, { ActionResponse, CurrentAdmin } from 'adminjs';
+import { ExpressLoader } from '@adminjs/nestjs/build/loaders/express.loader';
+import { withProtectedRoutesHandler } from '@adminjs/express/lib/authentication/protected-routes.handler';
+import { AbstractHttpAdapter } from '@nestjs/core';
+import { Router } from 'express';
+import { loadPackage } from '@nestjs/common/utils/load-package.util';
 
 import { TasksModule } from '../tasks/tasks.module';
 import { ObservablesDefinitions } from '../observe/observables';
@@ -11,9 +16,30 @@ import { ProgramService } from '../program/program.service';
 import { TraineeService } from '../program/trainee.service';
 import { TasksService } from '../tasks/tasks.service';
 
+class customLoader extends ExpressLoader {
+  register(admin: AdminJS, httpAdapter: AbstractHttpAdapter, options: AdminModuleOptions) {
+    const app = httpAdapter.getInstance();
+    const router = Router()
+    
+    /** protect AdminJS routes */
+    withProtectedRoutesHandler(router, admin)
+    
+    const adminJsExpressJs = loadPackage('@adminjs/express', '@adminjs/nestjs', () => require('@adminjs/express'))
+    const adminRouter = adminJsExpressJs.buildRouter(admin, router, options.formidableOptions);
+    
+    /** mount AdminJS routes */
+    app.use(options.adminJsOptions.rootPath, function admin(req, res, next) {
+      return adminRouter(req, res, next)
+    });
+
+    super.reorderRoutes(app);
+  }
+}
+
 export const AdminModuleBootstrap = AdminModule.createAdminAsync({
   imports: [PrismaModule, ProgramModule, TasksModule],
   inject: [PrismaService, ProgramService, TraineeService, TasksService],
+  customLoader,
   useFactory: async (
     prisma: PrismaService,
     programService: ProgramService,
@@ -25,6 +51,8 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
       adminJsOptions: {
         branding: { companyName: 'Seedo' },
         rootPath: '/admin',
+        logoutPath: '/auth/logout',
+        loginPath: '/auth/login',
         resources: [
           {
             resource: { model: dmmf.modelMap.trainees, client: prisma },

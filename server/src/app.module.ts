@@ -9,6 +9,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ProgramModule } from './program/program.module';
 import { AdminModuleBootstrap } from './admin/bootstrap';
 import { ObserveModule } from './observe/observe.module';
+import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { SessionGuard } from './auth/session.guard';
 
 AdminJS.registerAdapter({ Resource, Database })
 
@@ -17,11 +20,15 @@ AdminJS.registerAdapter({ Resource, Database })
     ExternalApiModule, // PCX, Epic, Clarity
     PrismaModule,
     AdminModuleBootstrap,
+    AuthModule,
     
     TasksModule,
     ProgramModule,
-    ObserveModule    
+    ObserveModule,
   ],
   controllers: [AppController],
+  providers: [
+    { provide: APP_GUARD, useClass: SessionGuard }
+  ],
 })
 export class AppModule {}

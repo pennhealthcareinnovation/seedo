@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Router } from 'express';
+import * as session from 'express-session';
 
 import { AppModule } from './app.module';
 
@@ -18,7 +19,18 @@ async function bootstrap() {
 
   /** Express instance */
   const expressInstance = app.getHttpAdapter().getInstance();
-  const baseRouter = Router()
+  
+  /** 
+   * Initialie session storage 
+   * TOOD: For production this should be set to store in a database instead of in memory
+   * https://github.com/voxpelli/node-connect-pg-simple
+   * */
+  expressInstance.use(session({
+    secret: 'seedo',
+    name: 'seedo-session',
+    resave: true,
+    saveUninitialized: false,
+  }))
 
   await app.listen(3000);
 }
