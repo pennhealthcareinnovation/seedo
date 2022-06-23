@@ -29,6 +29,7 @@ export class AuthController {
     }
     req.session.adminUser = adminUser;
     req.session.save()
+    console.debug('session', req.session)
     res.redirect(302, '/admin');
   }
 
@@ -36,7 +37,6 @@ export class AuthController {
   async logout(
     @Req() req: Request,
   ) {
-    console.debug(req.session)
     req.session.destroy((err: any) => {
       if (err) {
         this.logger.error('Unable to destroy session', err)

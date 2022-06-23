@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "sourceMap": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@seedo/server/*": ["../server/src/*"],
+    },
+    "typeRoots": [
+      "../server/src/**.types.ts",
+      "./node_modules/@types"
+    ],
+  }
+}

@@ -14,20 +14,24 @@ services:
       - 9229:9229
     env_file:
       - ./.env
+    # environment:
+    #   - AUTH_DISABLED=true
     volumes:
       # - /server/node_modules
       - .:/app
     tty: true
     stdin_open: true
   
-  database:
-    image: postgres:14.2
-    ports: 
-      - 5432:5432
-    env_file:
-      - ./.env
-    tty: true
-    stdin_open: true
+  # database:
+  #   image: postgres:14.2
+  #   ports: 
+  #     - 5432:5432
+  #   env_file:
+  #     - ./.env
+  #   volumes:
+  #     - ./db:/var/lib/postgresql/data
+  #   tty: true
+  #   stdin_open: true
 
 networks:
   default:

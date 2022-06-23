@@ -1,4 +1,4 @@
-interface ProcedureLog {
+export interface ProcedureLog {
   logID?: number
   
   /** The trainee that the procedure log belongs to */
@@ -22,7 +22,7 @@ interface ProcedureLog {
   procedures?: Procedure[]
 }
 
-interface Procedure {
+export interface Procedure {
   logID?: number,
   typeID: number | string,
   role: number,

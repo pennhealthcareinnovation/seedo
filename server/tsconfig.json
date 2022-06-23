@@ -20,6 +20,10 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@seedo/server/*": ["./*"],
-    }
+    },
+    "typeRoots": [
+      "./src/types",
+      "./node_modules/@types"
+    ],
   }
 }

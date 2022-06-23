@@ -12,45 +12,54 @@ export class ProgramService {
   ) {}
   
   /**
-   * Pull and upsert programs from MedHub with their procedureTypes
+   * Pull and upsert programs from MedHub
    */
   async reloadPrograms() {
     const result = await this.medhubService.request({
       endpoint: 'programs/all'
     })
 
-    let newPrograms = result.map((program): Prisma.programsCreateInput => ({
-        programID: program.programID,
+    const newPrograms = result.map((program): Prisma.programsCreateInput => ({
+      medhubProgramId: program.programID,
         name: program.program_name,
         data: program,
     }))
 
-    /** load procedureTYpes for each program */
-    const procedureTypes = await Promise.all(
-      newPrograms.map(async program => ({
-        programID: program.programID, 
-        procedureTypes: await this.medhubService.request({
-          endpoint: 'procedures/procedureTypes',
-          request: { programID: program.programID }
-        })
-      }))
-    )
-
-    newPrograms = newPrograms.map(program => {
-      program.procedureTypes = procedureTypes.find(procedureType => procedureType.programID === program.programID).procedureTypes
-      return program
-    })
-
-    await this.prismaService.$transaction(
-      newPrograms.map(program => 
+    await this.prismaService.$transaction([
+      ...newPrograms.map(program =>
         this.prismaService.programs.upsert({
-          where: { programID: program.programID },
+          where: { medhubProgramId: program.medhubProgramId },
           update: program,
           create: program
         })
       )
-    )
+    ])
 
     return await this.prismaService.programs.findMany()
+  }
+
+  /** Upsert program procedure types */
+  async reloadProcedureTypes(id: number) {
+    const program = await this.prismaService.programs.findUnique({ where: { id } })
+    const programProcedureTypes = await this.medhubService.request({
+      endpoint: 'procedures/procedureTypes',
+      request: { programID: program.medhubProgramId }
+    })
+
+    const newProcedureTypes = programProcedureTypes.map((procedureType): Prisma.procedureTypesCreateInput => ({
+      medhubProcedureTypeId: procedureType.typeID,
+      name: procedureType.procedure_name,
+      program: { connect: { id } },
+    }))
+
+    await this.prismaService.$transaction([
+      ...newProcedureTypes.map(procedureType =>
+        this.prismaService.procedureTypes.upsert({
+          where: { medhubProcedureTypeId: procedureType.medhubProcedureTypeId },
+          update: procedureType,
+          create: procedureType
+        })
+      )
+    ])
   }
 }

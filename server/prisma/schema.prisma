@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["debian-openssl-1.1.x"]
 }
 
 datasource db {
@@ -9,28 +10,42 @@ datasource db {
 
 model programs {
   id        Int        @id @default(autoincrement())
-  programID String     @unique(map: "programs_programid_unique") @db.VarChar(255)
+  medhubProgramId String     @unique() @db.VarChar(255)
   name      String     @db.VarChar(255)
   data      Json
-  procedureTypes Json?
   createdAt DateTime   @db.Timestamptz(6) @default(now())
   updatedAt DateTime   @db.Timestamptz(6) @updatedAt
   trainees  trainees[]
   tasks tasks[]
+  procedureTypes procedureTypes[]
+}
+
+model procedureTypes {
+  id                    Int         @id @default(autoincrement())
+  programId             Int
+  medhubProcedureTypeId String      @db.VarChar(255) @unique()
+  name                  String      @db.VarChar(255)
+  data                  Json?
+
+  createdAt             DateTime    @db.Timestamptz(6) @default(now())
+  updatedAt             DateTime    @db.Timestamptz(6) @updatedAt
+
+  program               programs    @relation(fields: [programId], references: [id])
+  tasks                 tasks[]
 }
 
 model trainees {
   id              Int      @id @default(autoincrement())
-  medhubUserId    String   @unique(map: "trainees_medhubuserid_unique") @db.VarChar(255)
-  medhubProgramId String   @db.VarChar(255)
-  pennId          String   @unique(map: "trainees_pennid_unique") @db.VarChar(255)
+  programId       Int
+  medhubUserId    String   @unique() @db.VarChar(255)
+  pennId          String   @unique() @db.VarChar(255)
   lastName        String?  @db.VarChar(255)
   firstName       String?  @db.VarChar(255)
   data            Json?
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt
   
-  programs        programs @relation(fields: [medhubProgramId], references: [programID], map: "trainees_medhubprogramid_foreign")
+  programs        programs @relation(fields: [programId], references: [id])
   observations    observations[]
   ehrMetadata     traineesEhrMetadata?
 }
@@ -39,43 +54,68 @@ model traineesEhrMetadata {
   id              Int       @id @default(autoincrement())
   traineeId       Int
   data            Json?
-  trainee         trainees  @relation(fields: [traineeId], references: [id], map: "traineesehrmetadata_traineeid_foreign")
+  trainee         trainees  @relation(fields: [traineeId], references: [id])
 }
 
 model observations {
   id              Int       @id @default(autoincrement())
   traineeId       Int
   
-  // the task that created this observation
+  // The task that created this observation
   taskId          Int
-  
+
   // A unique EHR identifier for this event (i.e. CSN, accession, note id, procedure identifier, etc.)
-  ehrObservationId String   @db.VarChar(18)
+  ehrObservationId     String   @db.VarChar(18)
+  ehrObservationIdType String @db.VarChar(18)
+
+  // Date of the observation/event
+  observationDate    DateTime  @db.Timestamptz(6)
+
+  // Patient-level metadata
+  patientId          String   @db.VarChar(18)
+  patientIdType      String   @db.VarChar(18)
+  patientName        String   @db.VarChar(255)
+  patientBirthDate   DateTime
   
-  type            String    @db.VarChar(255)
-  date            DateTime  @db.Timestamptz(6)
-  patientId       String    @db.VarChar(18)
+  // Catch all for other data
   data            Json?
-  createdAt       DateTime @db.Timestamptz(6) @default(now())
-  updatedAt       DateTime @db.Timestamptz(6) @updatedAt
 
   // Metadata for sync to medhub
   syncId          String?   @unique() @db.VarChar(255)
   syncedAt        DateTime? @db.Timestamptz(6)
+
+  createdAt       DateTime @db.Timestamptz(6) @default(now())
+  updatedAt       DateTime @db.Timestamptz(6) @updatedAt
   
   trainee         trainees  @relation(fields: [traineeId], references: [id])
   task            tasks     @relation(fields: [taskId], references: [id])
 
-  @@unique([traineeId, ehrObservationId])
+  @@unique([traineeId, ehrObservationId, ehrObservationIdType])
 }
 
 model tasks {
   id                  Int       @id @default(autoincrement())
   programId           Int
-  medhubProcedureId   String    @db.VarChar(255)
+  procedureTypeId     Int
   observableType      String    @db.VarChar(255)
   args                Json?
 
   program             programs  @relation(fields: [programId], references: [id])
+  procedureType       procedureTypes @relation(fields: [procedureTypeId], references: [id])
   observations        observations[]
+}
+
+model sentEmails {
+  id                  Int       @id @default(autoincrement())
+  
+  // What initiated the email send? (i.e. task id)
+  initiatorType          String?
+  initiatorId            Int?
+
+  to                  String
+  subject             String
+  email               Json
+
+  createdAt       DateTime @db.Timestamptz(6) @default(now())
+  updatedAt       DateTime @db.Timestamptz(6) @updatedAt
 }

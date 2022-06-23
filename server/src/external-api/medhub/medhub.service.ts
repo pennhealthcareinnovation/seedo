@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { getUnixTime } from 'date-fns';
 import * as crypto from 'crypto'
 import axios from 'axios'
+import { ConfigService } from '@nestjs/config';
+
+import type { Procedure, ProcedureLog } from './medhub.types'
 
 interface LogPatientProcedure {
   log: ProcedureLog,
@@ -17,16 +20,14 @@ export class MedhubService {
 
   config!: any
 
-  constructor() {
-    const { MEDHUB_CLIENT_ID, MEDHUB_PRIVATE_KEY, MEDHUB_BASE_URL } = process.env
-    if (!MEDHUB_CLIENT_ID || !MEDHUB_PRIVATE_KEY || !MEDHUB_BASE_URL)
-      this.logger.error('MEDHUB_ environment variables are missing')
-    else
-      this.config = {
-        client_id: MEDHUB_CLIENT_ID,
-        private_key: MEDHUB_PRIVATE_KEY,
-        base_url: MEDHUB_BASE_URL
-      }
+  constructor(
+    private configService: ConfigService
+  ) {
+    this.config = {
+      client_id: this.configService.getOrThrow<string>('MEDHUB_CLIENT_ID'),
+      private_key: this.configService.getOrThrow<string>('MEDHUB_PRIVATE_KEY'),
+      base_url: this.configService.getOrThrow<string>('MEDHUB_BASE_URL')
+    }
   }
 
   async request({ endpoint, request }: { endpoint: string, request?: any }) {

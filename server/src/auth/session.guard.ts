@@ -4,6 +4,7 @@ import { Observable } from "rxjs";
 import { Request } from "../types";
 
 export const IS_PUBLIC_ROUTE = 'IS_PUBLIC_ROUTE';
+export const AUTH_DISABLED = process.env?.AUTH_DISABLED === 'true' ?? false;
 export const IsPublicRoute = () => SetMetadata(IS_PUBLIC_ROUTE, true);
 
 @Injectable()
@@ -15,6 +16,8 @@ export class SessionGuard implements CanActivate {
   }
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    // if (AUTH_DISABLED) return true;
+
     const request = context.switchToHttp().getRequest();
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_ROUTE, [
       context.getHandler(),

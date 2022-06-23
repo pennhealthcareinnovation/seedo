@@ -4,5 +4,8 @@
   "workspaces": [
     "server",
     "function"
-  ]
+  ],
+  "dependencies": {
+    "npm": "^8.5.0"
+  }
 }

@@ -3,6 +3,7 @@ import { connect, config, ConnectionPool, ISqlType, DateTime } from 'mssql'
 import { resolve } from 'path'
 import { readFileSync } from 'fs'
 import { flatten, groupBy } from 'lodash';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ClarityService {
@@ -12,16 +13,14 @@ export class ClarityService {
 
   private readonly logger = new Logger(ClarityService.name)
 
-  constructor() {
-    const { CLARITY_HOST, CLARITY_DB, CLARITY_USER, CLARITY_PW } = process.env
-    if (!CLARITY_HOST || !CLARITY_DB || !CLARITY_USER || !CLARITY_PW)
-      throw Error('CLARITY_ evnironment variables are missing!')
-    
+  constructor(
+    private configService: ConfigService
+  ) {
     this.config = {
-      server: CLARITY_HOST,
-      database: CLARITY_DB,
-      user: CLARITY_USER,
-      password: CLARITY_PW,
+      server: this.configService.getOrThrow<string>('CLARITY_HOST'),
+      database: this.configService.getOrThrow<string>('CLARITY_DB'),
+      user: this.configService.getOrThrow<string>('CLARITY_USER'),
+      password: this.configService.getOrThrow<string>('CLARITY_PW'),
       pool: {
         max: 10,
         min: 0

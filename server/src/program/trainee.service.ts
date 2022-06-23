@@ -13,10 +13,11 @@ export class TraineeService {
     private prismaService: PrismaService
   ) {}
 
-  async reloadProgramTrainees(programID: string) {
+  async reloadProgramTrainees(programId: number) {
+    const program = await this.prismaService.programs.findUnique({ where: { id: programId } })
     const trainees = await this.medhubService.request({
       endpoint: `users/residents`,
-      request: { programID }
+      request: { programID: program.medhubProgramId }
     })
     const employeeInfo = await this.clarityService.employeeInfo(
       trainees.map(trainee => trainee.employeeID)
@@ -30,7 +31,7 @@ export class TraineeService {
       data: trainee,
       
       programs: {
-        connect: { programID: trainee.programID }
+        connect: { id: program.id }
       },
 
       ehrMetadata: {

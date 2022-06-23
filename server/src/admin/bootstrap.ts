@@ -7,14 +7,14 @@ import { AbstractHttpAdapter } from '@nestjs/core';
 import { Router } from 'express';
 import { loadPackage } from '@nestjs/common/utils/load-package.util';
 
-import { TasksModule } from '../tasks/tasks.module';
 import { ObservablesDefinitions } from '../observe/observables';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProgramModule } from '../program/program.module';
 import { ProgramService } from '../program/program.service';
 import { TraineeService } from '../program/trainee.service';
-import { TasksService } from '../tasks/tasks.service';
+import { TasksService } from '../observe/tasks.service';
+import { ObserveModule } from '../observe/observe.module';
 
 class customLoader extends ExpressLoader {
   register(admin: AdminJS, httpAdapter: AbstractHttpAdapter, options: AdminModuleOptions) {
@@ -22,7 +22,7 @@ class customLoader extends ExpressLoader {
     const router = Router()
     
     /** protect AdminJS routes */
-    withProtectedRoutesHandler(router, admin)
+    // withProtectedRoutesHandler(router, admin)
     
     const adminJsExpressJs = loadPackage('@adminjs/express', '@adminjs/nestjs', () => require('@adminjs/express'))
     const adminRouter = adminJsExpressJs.buildRouter(admin, router, options.formidableOptions);
@@ -37,7 +37,7 @@ class customLoader extends ExpressLoader {
 }
 
 export const AdminModuleBootstrap = AdminModule.createAdminAsync({
-  imports: [PrismaModule, ProgramModule, TasksModule],
+  imports: [PrismaModule, ProgramModule, ObserveModule],
   inject: [PrismaService, ProgramService, TraineeService, TasksService],
   customLoader,
   useFactory: async (
@@ -55,6 +55,10 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
         loginPath: '/auth/login',
         resources: [
           {
+            resource: { model: dmmf.modelMap.procedureTypes, client: prisma },
+            options: {}
+          },
+          {
             resource: { model: dmmf.modelMap.trainees, client: prisma },
             options: {}
           },
@@ -63,11 +67,11 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
             options: {
               properties: {
                 // TOOD: this should dynamically match the program - https://github.com/SoftwareBrothers/adminjs/issues/785
-                medhubProcedureId: {
-                  availableValues: (await prisma.programs.findMany({}))
-                    .flatMap(p => p.procedureTypes)
-                    .map((type: any) => ({ label: type.procedure_name, value: type.typeID }))
-                },
+                // medhubProcedureId: {
+                //   availableValues: (await prisma.programs.findMany({}))
+                //     .flatMap(p => p.procedureTypes)
+                //     .map((type: any) => ({ label: type.procedure_name, value: type.typeID }))
+                // },
                 observableType: {
                   availableValues: Object.values(ObservablesDefinitions).map(obs => ({
                     label: obs.displayName,
@@ -82,7 +86,9 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
                     const task = context.record.params
                     await tasksService.runCollectionTask(task.id)
                     return { record: context.record.toJSON() }
-                  }
+                  },
+                  component: false,
+                  icon: 'Play'
                 }
               }
             },
@@ -91,6 +97,17 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
             resource: { model: dmmf.modelMap.programs, client: prisma },
             options: {
               actions: {
+                reloadProecureTypes: {
+                  actionType: 'record',
+                  isVisible: true,
+                  handler: async (req, res, context): Promise<ActionResponse> => {
+                    const program = context.record.params as any
+                    await programService.reloadProcedureTypes(program.id)
+                    return { record: context.record.toJSON() }
+                  },
+                  component: false,
+                  icon: 'Reset'
+                },
                 reloadFromMedhub: {
                   actionType: 'resource',
                   isVisible: true,
@@ -112,7 +129,7 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
                   isVisible: true,
                   handler: async (req, res, context) => {
                     const program = context.record.params as any
-                    await traineeService.reloadProgramTrainees(program.programID)
+                    await traineeService.reloadProgramTrainees(program.id)
                     return { record: context.record.toJSON() }
                   },
                   component: false,
