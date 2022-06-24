@@ -4,13 +4,17 @@ import { AppConfigurationClient, isSecretReference, parseSecretReference } from 
 
 export async function configuration() {
   const credential = new DefaultAzureCredential()
-  const APP_CONFIG_CONNECTION = process?.env?.APP_CONFIG_CONNECTION
+
+  const { APP_CONFIG_FILTER, APP_CONFIG_CONNECTION } = process.env
+  if (!APP_CONFIG_FILTER)
+    throw ('FATAL -- APP_CONFIG_FILTER not defined!')
+
   if (!APP_CONFIG_CONNECTION)
-    throw ('APP_CONFIG_CONNECTION not defined!')
+    throw ('FATAL -- APP_CONFIG_CONNECTION not defined!')
 
   const client = new AppConfigurationClient(APP_CONFIG_CONNECTION)
   const settingsIterator = client.listConfigurationSettings({
-    labelFilter: 'shared,seedo/dev'
+    labelFilter: APP_CONFIG_FILTER
   })
 
   let config = {}
