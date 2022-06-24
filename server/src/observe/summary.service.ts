@@ -5,7 +5,7 @@ import * as mjml2html from 'mjml'
 
 import { PrismaService } from '../prisma/prisma.service';
 import { Email, MailerService } from '../mailer/mailer.service';
-import { ObservableDefintion, ObservablesDefinitions } from './observables';
+import { ObservableDefintion, ObservablesDefinitions } from './observable.definitions';
 import { startOfDay, sub } from 'date-fns';
 
 @Injectable()

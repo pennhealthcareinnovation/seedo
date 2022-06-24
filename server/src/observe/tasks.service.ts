@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { ObservableService } from './observable.service';
-import { ObservablesDefinitions } from './observables';
+import { ObservablesDefinitions } from './observable.definitions';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClarityService } from '../external-api/clarity/clarity.service';
 import { MedhubService } from '../external-api/medhub/medhub.service';

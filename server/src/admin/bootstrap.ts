@@ -7,7 +7,7 @@ import { AbstractHttpAdapter } from '@nestjs/core';
 import { Router } from 'express';
 import { loadPackage } from '@nestjs/common/utils/load-package.util';
 
-import { ObservablesDefinitions } from '../observe/observables';
+import { ObservablesDefinitions } from '../observe/observable.definitions';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProgramModule } from '../program/program.module';
