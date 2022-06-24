@@ -37,16 +37,16 @@ export type Email = {
 export class MailerService {
   private readonly logger = new Logger(MailerService.name)
   transporter!: nodemailer.Transporter
-  previewsOnly!: boolean
+  skipEmails!: boolean
 
   constructor(
     private prismaService: PrismaService,
     private configService: ConfigService
   ) {
-    if (this.configService.get<boolean>('PREVIEW_EMAILS_ONLY') === true) {
-      this.previewsOnly = true
+    if (this.configService.get<boolean>('SKIP_EMAIL_SEND') === true) {
+      this.skipEmails = true
     } else {
-      this.previewsOnly = false
+      this.skipEmails = false
       this.transporter = nodemailer.createTransport({
         host: this.configService.getOrThrow<string>('SMTP_IP'),
         secure: false,
@@ -66,7 +66,10 @@ export class MailerService {
   }
 
   async sendEmail(email: Email) {
-    await this.transporter.sendMail(email)
+    if (this.skipEmails === false) {
+      await this.transporter.sendMail(email)
+    }
+
     const record = await this.prismaService.sentEmails.create({
       data: {
         to: email.to,
@@ -77,6 +80,7 @@ export class MailerService {
         initiatorId: email?.initiatorId
       }
     })
+
     this.logger.debug(`SENT EMAIL - ${email.to} | ${email.subject}`)
     return record
   }
