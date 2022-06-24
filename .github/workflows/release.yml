@@ -21,37 +21,36 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment: production
     steps:
-      # - name: 'Checkout GitHub Action'
-      #   uses: actions/checkout@main
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@main
 
-      # - name: Setup Node ${{ env.AZURE_FUNCTION_NODE_VERSION }} Environment
-      #   uses: actions/setup-node@v1
-      #   with:
-      #     node-version: ${{ env.AZURE_FUNCTION_NODE_VERSION }}
-
+      - name: Setup Node ${{ env.AZURE_FUNCTION_NODE_VERSION }} Environment
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.AZURE_FUNCTION_NODE_VERSION }}
       
       # # TODO: Currently function apps don't support packages in sub directories: https://github.com/Azure/azure-functions-host/issues/7345
       # # So we build our common and server dependencies and then create SHIM directories
-      # - name: 'Build Function App'
-      #   shell: bash
-      #   run: |
-      #     pushd server
-      #     npm i
-      #     npm run build
-      #     popd
+      - name: 'Build Function App'
+        shell: bash
+        run: |
+          pushd server
+          npm i
+          npm run build
+          popd
 
-      #     pushd function          
-      #     npm i
-      #     npm run build --if-present
-      #     npm prune --production      
-      #     popd
+          pushd function          
+          npm i
+          npm run build --if-present
+          npm prune --production      
+          popd
 
-      #     pushd server
-      #     npm prune --production      
-      #     popd
+          pushd server
+          npm prune --production      
+          popd
 
-      #     node function/shim-functions.js
-      #     cp function/host.json .
+          node function/shim-functions.js
+          cp function/host.json .
 
       # NOTE: Azure CLI is not installed by default on self-hosted runners
       - name: 'Login via Azure CLI'
@@ -61,8 +60,8 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # - name: 'Deploy Function App
-      #   uses: Azure/functions-action@v1
-      #   with:
-      #     app-name: ${{ secrets.AZURE_FUNCTION_APP_NAME }}
-      #     package: .
+      - name: 'Deploy Function App'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: use2-chci-ch-seedo-prod-function
+          package: .
