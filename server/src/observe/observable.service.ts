@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { observable } from 'rxjs';
 import { ClarityService } from '../external-api/clarity/clarity.service';
-import { ObservableQueryResult, ObservablesDefinitions } from './observables';
+import { ObservableQueryResult, ObservablesDefinitions } from './observable.definitions'
 
 @Injectable()
 export class ObservableService {
