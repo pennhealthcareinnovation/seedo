@@ -15,6 +15,7 @@ import { SessionGuard } from './auth/session.guard';
 import { MailerService } from './mailer/mailer.service';
 import { MailerModule } from './mailer/mailer.module';
 import { configuration } from './config';
+import { UtilitiesModule } from './utilities/utilities.module';
 
 AdminJS.registerAdapter({ Resource, Database })
 
@@ -29,6 +30,7 @@ AdminJS.registerAdapter({ Resource, Database })
 
     ProgramModule,
     ObserveModule,
+    UtilitiesModule,
   ],
   controllers: [AppController],
   providers: [
