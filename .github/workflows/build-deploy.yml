@@ -12,7 +12,7 @@ env:
 jobs:
   build_deploy_function_prod:
     name: Build & Deploy Function (Prod)
-    runs-on: [self-hosted, chci]
+    runs-on: [self-hosted, jump]
     if: github.ref == 'refs/heads/main'
     steps:
       # - name: 'Checkout GitHub Action'
