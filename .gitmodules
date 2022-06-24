@@ -1,0 +1,3 @@
+[submodule "server/src/observe/observables"]
+	path = server/src/observe/observables
+	url = git@github.com:pennhealthcareinnovation/seedo-observables.git
