@@ -81,7 +81,7 @@ export class MailerService {
       }
     })
 
-    this.logger.debug(`SENT EMAIL - ${email.to} | ${email.subject}`)
+    this.logger.debug(`${this.skipEmails ? 'SKIPPED' : 'SENT'} EMAIL - ${email.to} | ${email.subject}`)
     return record
   }
 }
