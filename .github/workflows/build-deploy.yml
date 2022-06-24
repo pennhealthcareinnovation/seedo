@@ -1,0 +1,65 @@
+name: 'Build & Deploy'
+on:
+  release:
+    types:
+    - published
+  push:
+    branches: [ dev, main ]
+
+env:
+  AZURE_FUNCTION_NODE_VERSION: '14.x' # set this to the node version to use (supports 8.x, 10.x, 12.x)
+
+jobs:
+  build_deploy_function_prod:
+    name: Build & Deploy Function (Prod)
+    runs-on: [self-hosted, chci]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      # - name: 'Checkout GitHub Action'
+      #   uses: actions/checkout@main
+
+      # - name: Setup Node ${{ env.AZURE_FUNCTION_NODE_VERSION }} Environment
+      #   uses: actions/setup-node@v1
+      #   with:
+      #     node-version: ${{ env.AZURE_FUNCTION_NODE_VERSION }}
+
+      
+      # # TODO: Currently function apps don't support packages in sub directories: https://github.com/Azure/azure-functions-host/issues/7345
+      # # So we build our common and server dependencies and then create SHIM directories
+      # - name: 'Build Function App'
+      #   shell: bash
+      #   run: |
+      #     pushd server
+      #     npm i
+      #     npm run build
+      #     popd
+
+      #     pushd function          
+      #     npm i
+      #     npm run build --if-present
+      #     npm prune --production      
+      #     popd
+
+      #     pushd server
+      #     npm prune --production      
+      #     popd
+
+      #     node function/shim-functions.js
+      #     cp function/host.json .
+
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
+
+      # - name: 'Deploy Function App
+      #   uses: Azure/functions-action@v1
+      #   with:
+      #     app-name: ${{ secrets.AZURE_FUNCTION_APP_NAME }}
+      #     package: .
