@@ -64,14 +64,15 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy:${{ steps.extract_branch.outputs.branch }}
           cache-to: type=inline,mode=max
 
-  deploy_function_prod:
-    name: Deploy Function (Prod)
+  deploy_prod:
+    name: Deploy (Prod)
     needs: [ build_function ]
     runs-on: [ self-hosted, jump ]
     
     if: github.ref == 'refs/heads/main'
     environment: production
 
+    # NOTE: Docker must be installed on the runner
     container:
       image: uphschcich.azurecr.io/seedo-function-deploy:main
       credentials:
