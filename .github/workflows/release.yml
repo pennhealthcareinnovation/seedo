@@ -61,7 +61,7 @@ jobs:
           file: ./function/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/focus-web:${{ steps.extract_branch.outputs.branch }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy:${{ steps.extract_branch.outputs.branch }}
           cache-to: type=inline,mode=max
 
   deploy_function_prod:
@@ -73,7 +73,7 @@ jobs:
     environment: production
 
     container:
-      image: ${{ env.REGISTRY }}/seedo-function-deploy:main
+      image: "${{ env.REGISTRY }}/seedo-function-deploy:main"
       credentials:
         username: ${{ secrets.AZURE_CLIENT_ID }}
         password: ${{ secrets.AZURE_CLIENT_SECRET }}
