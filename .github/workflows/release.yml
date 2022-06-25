@@ -64,27 +64,27 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/focus-web:${{ steps.extract_branch.outputs.branch }}
           cache-to: type=inline,mode=max
 
-#   deploy_function_prod:
-#     name: Deploy Function (Prod)
-#     needs: [ build_function ]
-#     runs-on: [ self-hosted, jump ]
+  deploy_function_prod:
+    name: Deploy Function (Prod)
+    needs: [ build_function ]
+    runs-on: [ self-hosted, jump ]
     
-#     if: github.ref == 'refs/heads/main'
-#     environment: production
+    if: github.ref == 'refs/heads/main'
+    environment: production
 
-#     container:
-#       image: uphschcich.azurecr.io.azurecr.io/seedo-function-deploy:main
-#       credentials:
-#         username: ${{ secrets.AZURE_CLIENT_ID }}
-#         password: ${{ secrets.AZURE_CLIENT_SECRET }}
-#       env:
-#         AZURE_TENANT_ID: ${{ AZURE_TENANT_ID }}
-#         AZURE_CLIENT_ID: ${{ AZURE_CLIENT_ID }}
-#         AZURE_CLIENT_SECRET: ${{ AZURE_CLIENT_SECRET }}
-#         AZURE_RESOURCE_GROUP: ${{ AZURE_RESOURCE_GROUP }}
-#         AZURE_FUNCTION_APP_NAME: use2-chci-ch-seedo-prod-function
+    container:
+      image: uphschcich.azurecr.io.azurecr.io/seedo-function-deploy:main
+      credentials:
+        username: ${{ secrets.AZURE_CLIENT_ID }}
+        password: ${{ secrets.AZURE_CLIENT_SECRET }}
+      env:
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+        AZURE_FUNCTION_APP_NAME: use2-chci-ch-seedo-prod-function
 
-#     steps:
-#       - name: Deploy function app
-#         shell: bash
-#         run: /home/node/entrypoint.sh
+    steps:
+      - name: Deploy function app
+        shell: bash
+        run: /home/node/entrypoint.sh
