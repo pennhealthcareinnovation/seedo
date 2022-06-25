@@ -73,7 +73,7 @@ jobs:
     environment: production
 
     container:
-      image: uphschcich.azurecr.io.azurecr.io/seedo-function-deploy:main
+      image: ${{ env.REGISTRY }}/seedo-function-deploy:main
       credentials:
         username: ${{ secrets.AZURE_CLIENT_ID }}
         password: ${{ secrets.AZURE_CLIENT_SECRET }}
