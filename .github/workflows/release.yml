@@ -18,6 +18,7 @@ jobs:
   build_function:
     name: Build Function
     runs-on: ubuntu-latest
+    environment: development
 
     steps:
       - name: 'Checkout repo'
