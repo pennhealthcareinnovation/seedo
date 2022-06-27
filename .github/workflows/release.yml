@@ -64,6 +64,32 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy:latest
           cache-to: type=inline,mode=max
 
+  deploy_dev:
+    name: Deploy (Dev)
+    needs: [ build_function ]
+    runs-on: [ self-hosted, jump ]
+    
+    if: github.ref == 'refs/heads/dev'
+    environment: development
+
+    # NOTE: Docker must be installed on the runner
+    container:
+      image: uphschcich.azurecr.io/seedo-function-deploy:dev
+      credentials:
+        username: ${{ secrets.AZURE_CLIENT_ID }}
+        password: ${{ secrets.AZURE_CLIENT_SECRET }}
+      env:
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+        AZURE_FUNCTION_APP_NAME: use2-chci-ch-seedo-dev-function
+
+    steps:
+      - name: Deploy function app
+        shell: bash
+        run: /root/deploy.sh
+
   deploy_prod:
     name: Deploy (Prod)
     needs: [ build_function ]
