@@ -4,8 +4,6 @@ on:
   release:
     types:
     - published
-  push:
-    branches: [ dev, main ]
 
 permissions:
   id-token: write
@@ -88,4 +86,4 @@ jobs:
     steps:
       - name: Deploy function app
         shell: bash
-        run: /home/node/deploy.sh
+        run: /root/deploy.sh
