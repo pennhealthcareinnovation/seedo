@@ -10,4 +10,4 @@ echo "Azure Function deploy.."
 az functionapp deployment source config-zip \
   --resource-group $AZURE_RESOURCE_GROUP \
   --name $AZURE_FUNCTION_APP_NAME \
-  --src /home/node/deploy_package.zip
+  --src /root/deploy_package.zip

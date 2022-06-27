@@ -88,4 +88,4 @@ jobs:
     steps:
       - name: Deploy function app
         shell: bash
-        run: /home/node/entrypoint.sh
+        run: /home/node/deploy.sh

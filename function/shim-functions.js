@@ -25,7 +25,7 @@ async function main() {
     const dir = file.split('/').slice(-2).slice(0, 1)[0] // get directory name
     await fsPromises.mkdir(path.join(cwd, dir), { recursive: true })
     let functionJSON = require(path.join(cwd, file))
-    functionJSON.scriptFile = functionJSON.scriptFile.replace('../dist', `../function/dist`)
+    functionJSON.scriptFile = functionJSON.scriptFile.replace('../dist/function', `../function/dist/function`)
     await fsPromises.writeFile(path.join(cwd, dir, 'function.json'), JSON.stringify(functionJSON, null, 2))
   }
 }
