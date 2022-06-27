@@ -44,25 +44,5 @@ export class ClarityService {
       this.logger.error(e)
     }
   }
- 
-  /**
-   * Load employee information from Clarity
-   * @param user_alias[] - array of pennIds
-   * @returns 
-   */
-  async employeeInfo (userAliases: string[]) {
-    return await this.query({ 
-      query: `
-        select
-          user_alias
-          ,user_id
-        from
-          clarity_emp
-        where
-          user_alias in ('${userAliases.join("','")}')
-      `,
-      vars: []
-    })
-  }
 
 }

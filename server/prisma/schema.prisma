@@ -38,7 +38,8 @@ model trainees {
   id              Int      @id @default(autoincrement())
   programId       Int
   medhubUserId    String   @unique() @db.VarChar(255)
-  pennId          String   @unique() @db.VarChar(255)
+  email           String   @unique() @db.VarChar(320)
+  employeeId       String   @unique() @db.VarChar(255)
   lastName        String?  @db.VarChar(255)
   firstName       String?  @db.VarChar(255)
   data            Json?
@@ -47,14 +48,6 @@ model trainees {
   
   programs        programs @relation(fields: [programId], references: [id])
   observations    observations[]
-  ehrMetadata     traineesEhrMetadata?
-}
-
-model traineesEhrMetadata {
-  id              Int       @id @default(autoincrement())
-  traineeId       Int
-  data            Json?
-  trainee         trainees  @relation(fields: [traineeId], references: [id])
 }
 
 model observations {
@@ -81,8 +74,13 @@ model observations {
   data            Json?
 
   // Metadata for sync to medhub
-  syncId          String?   @unique() @db.VarChar(255)
-  syncedAt        DateTime? @db.Timestamptz(6)
+  // NOTES:
+  // A log can contain more than one procedure.
+  // medhubPatientId is a hashed EHR patient ID.
+  syncedAt             DateTime? @db.Timestamptz(6)
+  medhubLogId          Int?
+  medhubProcedureId    Int? @unique()
+  medhubPatientId      String?
 
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt

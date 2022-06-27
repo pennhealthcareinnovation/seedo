@@ -21,7 +21,7 @@ export class TasksService {
 
   async syncObservations() {
     const observations = await this.prismaService.observations.findMany({
-      where: { syncId: undefined },
+      where: { syncedAt: undefined },
       include: {
         trainee: true,
         task: {
@@ -59,17 +59,18 @@ export class TasksService {
       })
       return {
         observationId: obs.id,
-        logID: logResult.logID,
-        procedureID: appendProcedure.procedureID
+        medhubLogId: logResult.logID.toString(),
+        medhubProcedureId: appendProcedure.procedureID.toString()
       }
     }))
 
     const update = await this.prismaService.$transaction(
-      synced.map(({ observationId, logID, procedureID }) =>
+      synced.map(({ observationId, medhubLogId, medhubProcedureId }) =>
         this.prismaService.observations.update({
           where: { id: observationId },
           data: {
-            syncId: procedureID.toString(),
+            medhubProcedureId,
+            medhubLogId, 
             syncedAt: new Date(),
           }
         })
@@ -92,11 +93,7 @@ export class TasksService {
       include: {
         program: {
           include: {
-            trainees: {
-              include: {
-                ehrMetadata: true
-              }
-            }
+            trainees: true
           }
         }
       }
@@ -106,17 +103,25 @@ export class TasksService {
     if (!ObservablesDefinitions?.[task.observableType])
       throw new Error(`Unknown observable type: ${task.observableType}`)
 
-    this.logger.log(`BEGIN Clarity query`)
+    this.logger.log(`TASK - ID: ${task.id}, BEGIN collection (Clarity query)`)
     const trainees = task.program.trainees
     const observables = await this.observableService.run({
       type: task.observableType,
       args: task.args
     })
-    this.logger.log(`END Clarity query`)
+    this.logger.log(`TASK - ID: ${task.id}, END collection (Clarity query)`)
 
     /** Create observations */
+    let matchedObservations = 0
+    let unqiueTrainees = 0
+
     trainees.forEach(async trainee => {
-      const traineeObs = observables.filter(obs => obs.providerId === (trainee.ehrMetadata.data as any).user_id)
+      const traineeObs = observables.filter(obs => obs.providerId === trainee.employeeId)
+      if (traineeObs.length > 0) {
+        unqiueTrainees += 1
+        matchedObservations += traineeObs.length
+      }
+
       const newObservations = traineeObs.map(obs => ({
         taskId: task.id,
 
@@ -151,6 +156,7 @@ export class TasksService {
         )
       )
     })
+    this.logger.log(`TASK - ID: ${task.id}, collected ${matchedObservations} observations for ${unqiueTrainees} trainees.`)
     this.logger.log(`END TASK - ID: ${task.id}, PROGRAM: ${task.program.name}, OSERVABLE: ${ObservablesDefinitions[task.observableType].displayName}`)
 
     return 'OK'

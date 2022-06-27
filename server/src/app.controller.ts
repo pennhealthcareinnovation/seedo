@@ -17,21 +17,18 @@ export class AppController {
     return 'ok'
   }
 
+  @IsPublicRoute()
   @Get('run-task')
   async getEchos(
-    @Query('id') id: number,
+    @Query('id', ParseIntPipe) id: number,
   ) {
     const result = await this.tasksService.runCollectionTask(id)
     return result
   }
 
   @IsPublicRoute()
-  @Get('summary')
-  async summary(
-    @Query('traineeId', ParseIntPipe) traineeId: number,
-    @Query('startDate', ParseDatePipe) startDate: Date,
-    @Query('endDate', ParseDatePipe) endDate: Date,
-  ) {
+  @Get('sendSummaries')
+  async summary() {
     const result = await this.summaryService.sendSummaries()
     return result
   }

@@ -19,25 +19,17 @@ export class TraineeService {
       endpoint: `users/residents`,
       request: { programID: program.medhubProgramId }
     })
-    const employeeInfo = await this.clarityService.employeeInfo(
-      trainees.map(trainee => trainee.employeeID)
-    )
 
     const newTrainees = trainees.map((trainee): Prisma.traineesCreateInput => ({
       medhubUserId: trainee.userID,
-      pennId: trainee.employeeID,
+      email: trainee.email,
+      employeeId: trainee.employeeID,
       lastName: trainee.name_last,
       firstName: trainee.name_first,
       data: trainee,
       
       programs: {
         connect: { id: program.id }
-      },
-
-      ehrMetadata: {
-        create: {
-          data: employeeInfo.find(info => info.user_alias === trainee.employeeID)
-        }
       }
     }))
 

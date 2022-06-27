@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { observations } from '@prisma/client';
 import { groupBy, template } from 'lodash';
-import * as mjml2html from 'mjml'
+import { add, format, startOfDay } from 'date-fns';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { Email, MailerService } from '../mailer/mailer.service';
 import { ObservableDefintion, ObservablesDefinitions } from './observable.definitions';
-import { startOfDay, sub } from 'date-fns';
 
 @Injectable()
 export class SummaryService {
+  private logger = new Logger(SummaryService.name)
   constructor(
     private prismaService: PrismaService,
     private mailerService: MailerService
@@ -49,11 +49,11 @@ export class SummaryService {
           <tr>
             <td style="padding: 0 15px 0 0;"><%= obs.patientName %></td>
             <td style="padding: 0 15px;"><%= obs.patientId %></td>
-            <td style="padding: 0 0 0 15px;"><%= obs.observationDate %></td>
+            <td style="padding: 0 0 0 15px;"><%= format(obs.observationDate, 'MMM d, HH:mm') %></td>
           </tr>
         <% }) %>
       </mj-table>
-    `)
+    `, { imports: { format } })
     return outputTemplate({ observable, observations })
   }
 
@@ -67,8 +67,8 @@ export class SummaryService {
       where: {
         traineeId,
         observationDate: {
-          gt: startDate,
-          lt: endDate
+          gte: startDate,
+          lte: endDate
         }
       },
       include: {
@@ -94,9 +94,11 @@ export class SummaryService {
     }
   }
 
-  /** Build and send summaries to trainees who have recent observations */
+  /**
+   * Build and send summaries to trainees who have observations that occurred yesterday
+   *  */
   async sendSummaries() {
-    const startDate = startOfDay(sub(new Date(), { days: 1 }))
+    const startDate = startOfDay(add(new Date(), { days: -1 }))
     const endDate = new Date()
 
     /** Trainess with observations from yesterday */
@@ -116,15 +118,15 @@ export class SummaryService {
         return await this.summaryForTrainee({ traineeId: result.traineeId, startDate, endDate })
       })
     )
-    console.debug(startDate, endDate, summaries)
+    this.logger.log(`Generated ${summaries.length} trainee summaries`)
 
     const sendSummaries = await Promise.all(
-      summaries.slice(0, 1).map(async summary => {
+      summaries.map(async summary => {
         const html = this.mailerService.convertMjml(summary.mjml)
         const email: Email = {
-          to: 'emeka.anyanwu@pennmedicine.upenn.edu',
+          to: summary.trainee.email,
           from: 'emeka.anyanwu@pennmedicine.upenn.edu',
-          subject: 'Seedo - Procedure Summary',
+          subject: 'Seedo - Procedure Summary (Beta)',
           text: 'This email can only be viewed in HTML/rich text mode',
           html,
           initiatorType: 'daily_summary'

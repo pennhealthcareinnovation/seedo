@@ -23,7 +23,7 @@ class AppModule { }
 const daily: AzureFunction = async (context: Context, timer: any) => {
   context.log('STARTED FUNCTION')
 
-  const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error'] })
+  const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn', 'log'] })
   const runTasks = await app.get(TasksService).runAllTasks()
   const sendSummaries = await app.get(SummaryService).sendSummaries()
 

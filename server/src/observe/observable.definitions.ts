@@ -57,7 +57,7 @@ export const ObservablesDefinitions = {
     type: 'cardiology_tte_read',
     displayName: 'Cardiology - Transthoracic Echo Read',
     varsFactory: (args: varsFactory) => ([
-      { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -1 })) },
+      { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
       { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
     ])
   }

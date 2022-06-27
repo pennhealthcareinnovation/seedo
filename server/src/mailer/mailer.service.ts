@@ -43,7 +43,7 @@ export class MailerService {
     private prismaService: PrismaService,
     private configService: ConfigService
   ) {
-    if (this.configService.get<boolean>('SKIP_EMAIL_SEND') === true) {
+    if (this.configService.get<boolean>('SKIP_EMAILS') == true) {
       this.skipEmails = true
     } else {
       this.skipEmails = false
@@ -81,7 +81,7 @@ export class MailerService {
       }
     })
 
-    this.logger.debug(`${this.skipEmails ? 'SKIPPED' : 'SENT'} EMAIL - ${email.to} | ${email.subject}`)
+    this.logger.log(`${this.skipEmails ? 'SKIPPED' : 'SENT'} EMAIL - ${email.to} | ${email.subject}`)
     return record
   }
 }
