@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { Module } from '@nestjs/common'
 import { AzureFunction, Context } from '@azure/functions'
 import { ConfigModule } from '@nestjs/config';
+import logIntercept from 'azure-function-log-intercept'
 
 import { configuration } from '@seedo/server/config'
 import { PrismaModule } from '@seedo/server/prisma/prisma.module'
@@ -21,6 +22,7 @@ import { MailerModule } from '@seedo/server/mailer/mailer.module';
 class AppModule { }
 
 const daily: AzureFunction = async (context: Context, timer: any) => {
+  logIntercept(context)
   context.log('STARTED FUNCTION')
 
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn', 'log'] })

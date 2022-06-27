@@ -14,7 +14,8 @@
     "@nestjs/common": "^8.0.0",
     "@nestjs/config": "^2.1.0",
     "@nestjs/core": "^8.0.0",
-    "@seedo/server": "file:../server"
+    "@seedo/server": "file:../server",
+    "azure-function-log-intercept": "^1.1.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",
