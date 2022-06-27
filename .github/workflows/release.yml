@@ -4,6 +4,9 @@ on:
   release:
     types:
     - published
+  push:
+    branches:
+      - dev
 
 permissions:
   id-token: write
@@ -16,7 +19,6 @@ jobs:
   build_function:
     name: Build Function
     runs-on: ubuntu-latest
-    environment: development
 
     steps:
       - name: 'Checkout repo'
@@ -67,7 +69,7 @@ jobs:
     needs: [ build_function ]
     runs-on: [ self-hosted, jump ]
     
-    if: github.ref == 'refs/heads/main'
+    if: github.event.release.target_commitish == 'main' # only on main branch releases
     environment: production
 
     # NOTE: Docker must be installed on the runner
