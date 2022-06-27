@@ -28,7 +28,7 @@ export class ClarityService {
       options: {
         encrypt: false
       },
-      requestTimeout: 180000,
+      requestTimeout: 600000, // 10 minutes in ms
     }
   }
  
