@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   server:
-    image: uphschcich.azurecr.io.azurecr.io/seedo-server:main
+    image: uphschcich.azurecr.io/seedo-server:latest
     build: 
       context: .
       dockerfile: ./server/Dockerfile
@@ -14,7 +14,7 @@ services:
     stdin_open: true
 
   function-deploy:
-    image: uphschcich.azurecr.io.azurecr.io/seedo-function-deploy:main
+    image: uphschcich.azurecr.io/seedo-function-deploy:latest
     profiles: ["function-deploy"] # exclude this from routine runs, only used for function deployment
     build:
       context: .

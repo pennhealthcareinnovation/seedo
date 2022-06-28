@@ -23,6 +23,9 @@ jobs:
     steps:
       - name: 'Checkout repo'
         uses: actions/checkout@main
+        with:
+          submodules: recursive
+
 
       - name: Extract Branch name
         shell: bash
