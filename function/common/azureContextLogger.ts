@@ -13,12 +13,15 @@ export class AzureContextLogger extends ConsoleLogger {
     this.azureContext = options.azureContext
   }
 
+  /** Don't add color, just return the string; Azure logs don't support color */
+  protected colorize(message: string, logLevel: LogLevel): string {
+    return message
+  }
+
   protected printMessages(messages: unknown[], context?: string, logLevel?: LogLevel, writeStreamType?: "stdout" | "stderr"): void {
     messages.forEach(message => {
       const output = this.stringifyMessage(message, logLevel);
-      const pidMessage = this.colorize(`[Nest] - `, logLevel);
-      const formattedLogLevel = this.colorize(logLevel.toUpperCase().padStart(7, ' '), logLevel);
-      const formattedMessage = `${pidMessage}${this.getTimestamp()} ${formattedLogLevel} [${context}] ${output}`;
+      const formattedMessage = `[Nest] - ${this.getTimestamp()} ${logLevel.toUpperCase().padStart(7, ' ')} [${context}] ${output}`;
 
       this.azureContext.log(formattedMessage)
     })

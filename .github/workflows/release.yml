@@ -24,8 +24,8 @@ jobs:
       - name: 'Checkout repo'
         uses: actions/checkout@main
         with:
-          # NOTE: this deploy key strategy will only work for the combination of a public repo with a single private submodule repo.
-          # The ideal solution is to use a service/machine account with a PAT.
+          # NOTE: this deploy key strategy will only with a single private submodule repo.
+          # The ideal solution is to use a service/machine account with a PAT: https://github.com/actions/checkout/issues/287
           submodules: recursive
           ssh-key: ${{ secrets.OBSERVABLES_DEPLOY_KEY }}
 
