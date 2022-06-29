@@ -3,17 +3,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ObservableService } from './observable.service';
 import { ObservablesDefinitions } from './observable.definitions';
 import { PrismaService } from '../prisma/prisma.service';
-import { ClarityService } from '../external-api/clarity/clarity.service';
 import { MedhubService } from '../external-api/medhub/medhub.service';
 import { differenceInYears } from 'date-fns';
 
 import type { Procedure, ProcedureLog } from '@seedo/server/external-api/medhub/medhub.types'
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name)
   constructor(
-    private clarityService: ClarityService,
     private medhubService: MedhubService,
     private observableService: ObservableService,
     private prismaService: PrismaService,
@@ -112,53 +111,54 @@ export class TasksService {
     this.logger.log(`TASK - ID: ${task.id}, END collection (Clarity query)`)
 
     /** Create observations */
-    let matchedObservations = 0
     let unqiueTrainees = 0
+    let newObservations: Prisma.observationsCreateManyInput[] = []
 
     trainees.forEach(async trainee => {
       const traineeObs = observables.filter(obs => obs.providerId === trainee.employeeId)
       if (traineeObs.length > 0) {
         unqiueTrainees += 1
-        matchedObservations += traineeObs.length
       }
 
-      const newObservations = traineeObs.map(obs => ({
-        taskId: task.id,
+      newObservations.push(...
+        traineeObs.map(obs => ({
+          taskId: task.id,
 
-        traineeId: trainee.id,
+          traineeId: trainee.id,
 
-        ehrObservationId: obs.ehrObservationId,
-        ehrObservationIdType: obs.ehrObservationIdType,
+          ehrObservationId: obs.ehrObservationId,
+          ehrObservationIdType: obs.ehrObservationIdType,
 
-        observationDate: obs.observationDate,
+          observationDate: obs.observationDate,
 
-        patientId: obs.patientId,
-        patientIdType: obs.patientIdType,
-        patientName: obs.patientName,
-        patientBirthDate: obs.patientBirthDate,
+          patientId: obs.patientId,
+          patientIdType: obs.patientIdType,
+          patientName: obs.patientName,
+          patientBirthDate: obs.patientBirthDate,
 
-        data: obs as any
-      }))
-
-      await this.prismaService.$transaction(
-        newObservations.map(obs =>
-          this.prismaService.observations.upsert({
-            where: {
-              traineeId_ehrObservationId_ehrObservationIdType: {
-                traineeId: obs.traineeId,
-                ehrObservationId: obs.ehrObservationId,
-                ehrObservationIdType: obs.ehrObservationIdType
-              }
-            },
-            create: obs,
-            update: obs
-          })
-        )
+          data: obs as any
+        }))
       )
     })
-    this.logger.log(`TASK - ID: ${task.id}, collected ${matchedObservations} observations for ${unqiueTrainees} trainees.`)
+
+    const transaction = await this.prismaService.$transaction(
+      newObservations.map(obs =>
+        this.prismaService.observations.upsert({
+          where: {
+            traineeId_ehrObservationId_ehrObservationIdType: {
+              traineeId: obs.traineeId,
+              ehrObservationId: obs.ehrObservationId,
+              ehrObservationIdType: obs.ehrObservationIdType
+            }
+          },
+          create: obs,
+          update: obs
+        })
+      )
+    )
+    this.logger.log(`TASK - ID: ${task.id}, collected ${newObservations.length} observations for ${unqiueTrainees} trainees.`)
     this.logger.log(`END TASK - ID: ${task.id}, PROGRAM: ${task.program.name}, OSERVABLE: ${ObservablesDefinitions[task.observableType].displayName}`)
 
-    return 'OK'
+    return transaction
   }
 }
