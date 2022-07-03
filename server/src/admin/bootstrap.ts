@@ -15,6 +15,7 @@ import { ProgramService } from '../program/program.service';
 import { TraineeService } from '../program/trainee.service';
 import { TasksService } from '../observe/tasks.service';
 import { ObserveModule } from '../observe/observe.module';
+import { sentEmails } from './resources/sentEmails';
 
 class customLoader extends ExpressLoader {
   register(admin: AdminJS, httpAdapter: AbstractHttpAdapter, options: AdminModuleOptions) {
@@ -54,6 +55,7 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
         logoutPath: '/auth/logout',
         loginPath: '/auth/login',
         resources: [
+          sentEmails(prisma),    
           {
             resource: { model: dmmf.modelMap.procedureTypes, client: prisma },
             options: {}

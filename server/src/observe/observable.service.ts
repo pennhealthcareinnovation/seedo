@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { observable } from 'rxjs';
 import { ClarityService } from '../external-api/clarity/clarity.service';
-import { ObservableQueryResult, ObservablesDefinitions } from './observable.definitions'
+import { ObservableQueryResult, ObservablesDefinitions, ObservableDefintion } from './observable.definitions'
 
 @Injectable()
 export class ObservableService {
@@ -16,8 +15,9 @@ export class ObservableService {
     /** Load observable definitions */
     try {
       this.observables = ObservablesDefinitions
-      Object.entries(this.observables).forEach(([type, tree]) => {
-        this.observables[type]['query'] = readFileSync(resolve(__dirname, `observables/${type}.sql`)).toString()
+      Object.entries(this.observables).forEach(([type, tree]: [string, ObservableDefintion]) => {
+        const name = tree.queryFile ?? `${type}.sql`
+        this.observables[type]['query'] = readFileSync(resolve(__dirname, `observables/${name}`)).toString()
       })
     }
     catch (e) {
