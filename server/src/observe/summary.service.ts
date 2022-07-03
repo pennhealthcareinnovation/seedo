@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { observations } from '@prisma/client';
-import { groupBy, template } from 'lodash';
+import { groupBy, template, capitalize } from 'lodash';
 import { add, format, startOfDay } from 'date-fns';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,14 +16,16 @@ export class SummaryService {
   ) { }
   intro(args: any) {
     return template(`
-      <mj-text align="left" font-size="20px" color="#00144D" font-family="helvetica" line-height="30px">
+      <mj-text align="left" font-size="20px" color="#00144D" font-family="helvetica">
         Seedo - Automated Procedure Logging
       </mj-text>
+      <mj-spacer height="10px" />
 
-      <mj-text align="left" font-size="12px" color="#00144D" font-family="helvetica" line-height="30px">
-        Hello <%= trainee.firstName %>, <br />
-        The below procedures have been logged based on your clinical activity. Do they look accurate? Let me (emeka.anyanwu@pennmedicine.upenn.edu) know what you think! <br />
-        Soon we'll begin logging them to MedHub automatically for you.
+      <mj-text align="left" font-size="12px"font-family="helvetica">
+        Hey <%= trainee.firstName %>, <br />
+        <p>The below procedures have been logged based on your clinical activity. Soon we'll begin logging them to MedHub automatically for you. Do they look accurate? </p>
+        <p>I've added stress echos (dobutamine and exercise) as well as TEEs. </p>
+        <p>Would you prefer to receive an email like this daily or at the end of the week?</p>   
       </mj-text>
       <br />
     `)(args)
@@ -31,29 +33,28 @@ export class SummaryService {
 
   observationTable(observable: ObservableDefintion, observations: observations[]) {
     let outputTemplate = template(`
-      <br />  
-      <mj-divider border-width="1px" border-style="dashed" border-color="lightgrey" />
-      <br />
-      <br />
+      <mj-spacer height="30px" />
       <mj-text align="left" font-size="15px" color="#00144D" font-family="helvetica" line-height="30px">
         ${observable.displayName}
       </mj-text>
-      <br />
+      <mj-spacer height="10px" />
       <mj-table>
         <tr style="border-bottom:1px solid #ecedee;text-align:left;padding:15px 0;">
           <th style="padding: 0 15px 0 0;">Patient Name</th>
           <th style="padding: 0 15px;">UID</th>
+          <th style="padding: 0 15px;"><%= capitalize(observations?.[0]?.ehrObservationIdType) %></th>
           <th style="padding: 0 0 0 15px;">Date</th>
         </tr>
         <% _.forEach(observations, function(obs) { %>
           <tr>
             <td style="padding: 0 15px 0 0;"><%= obs.patientName %></td>
             <td style="padding: 0 15px;"><%= obs.patientId %></td>
+            <td style="padding: 0 15px;"><%= obs.ehrObservationId %></td>
             <td style="padding: 0 0 0 15px;"><%= format(obs.observationDate, 'MMM d, HH:mm') %></td>
           </tr>
         <% }) %>
       </mj-table>
-    `, { imports: { format } })
+    `, { imports: { format, capitalize } })
     return outputTemplate({ observable, observations })
   }
 
@@ -98,7 +99,7 @@ export class SummaryService {
    * Build and send summaries to trainees who have observations that occurred yesterday
    *  */
   async sendSummaries() {
-    const startDate = startOfDay(add(new Date(), { days: -1 }))
+    const startDate = startOfDay(add(new Date(), { days: -7 }))
     const endDate = new Date()
 
     /** Trainess with observations from yesterday */

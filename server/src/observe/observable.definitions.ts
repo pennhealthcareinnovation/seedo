@@ -2,12 +2,6 @@ import { observations } from '@prisma/client'
 import { add, Duration, startOfDay } from 'date-fns'
 import * as mssql from 'mssql'
 
-export interface ObservableDefintion {
-  type: string
-  displayName: string
-  varsFactory?: (args: any) => string
-}
-
 /** 
  * All queries must implement this interface.
  * Additional column data can be fed into the 'data' JSON
@@ -51,14 +45,50 @@ export namespace ObservableTypes {
     finalizingUserId: string
   }
 }
+export interface ObservableDefintion {
+  type: string
 
-export const ObservablesDefinitions = {
+  /** File name for the query, otherwise defautls to <type>.sql */
+  queryFile?: string
+
+  displayName: string
+  varsFactory?: (args: any) => any
+}
+
+export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
   cardiology_tte_read: {
     type: 'cardiology_tte_read',
     displayName: 'Cardiology - Transthoracic Echo Read',
     varsFactory: (args: varsFactory) => ([
       { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
       { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
+    ])
+  },
+
+  cardiology_exercise_stress_echo: {
+    type: 'cardiology_exercise_stress_echo',
+    displayName: 'Cardiology - Exercise Stress Echo',
+    varsFactory: (args: varsFactory) => ([
+      { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
+      { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
+    ])
+  },
+
+  cardiology_dobutamine_stress_echo: {
+    type: 'cardiology_dobutamine_stress_echo',
+    displayName: 'Cardiology - Dobutamine Stress Echo',
+    varsFactory: (args: varsFactory) => ([
+      { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
+      { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
+    ])
+  },
+
+  cardiology_tee_read: {
+    type: 'cardiology_tee_read',
+    displayName: 'Cardiology - Transesophageal Echo Read',
+    varsFactory: (args: varsFactory) => ([
+      { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
+      { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) },
     ])
   }
 }
