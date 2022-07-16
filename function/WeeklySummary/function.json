@@ -4,8 +4,8 @@
       "name": "dailyTimer",
       "type": "timerTrigger",
       "direction": "in",
-      "schedule": "0 0 8 * * *"
+      "schedule": "0 0 8 * * 6"
     }
   ],
-  "scriptFile": "../dist/function/DailyCollectAndSummarize/index.js"
+  "scriptFile": "../dist/function/WeeklySummary/index.js"
 }
