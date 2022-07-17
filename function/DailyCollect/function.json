@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "name": "dailyTimer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 0 8 * * *"
+    }
+  ],
+  "scriptFile": "../dist/function/DailyCollect/index.js"
+}

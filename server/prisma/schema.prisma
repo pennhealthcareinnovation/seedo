@@ -78,9 +78,9 @@ model observations {
   // A log can contain more than one procedure.
   // medhubPatientId is a hashed EHR patient ID.
   syncedAt             DateTime? @db.Timestamptz(6)
-  medhubLogId          Int?
-  medhubProcedureId    Int? @unique()
-  medhubPatientId      String?
+  medhubLogId          String? @db.VarChar(255)
+  medhubProcedureId    String? @db.VarChar(255) @unique()
+  medhubPatientId      String? @db.VarChar(255)
 
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt

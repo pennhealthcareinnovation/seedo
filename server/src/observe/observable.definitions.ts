@@ -25,7 +25,7 @@ export type ObservableQueryResult = Omit<
 export interface varsFactory {
   /** 
    * Duration to *add* to the current date to get starting date;
-   * Default is { days: -1 }
+   * Default is { days: -7 }
    */
   startDateDiff?: Duration
 

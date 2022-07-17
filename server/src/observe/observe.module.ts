@@ -5,10 +5,11 @@ import { MailerModule } from '../mailer/mailer.module';
 import { ObservableService } from './observable.service';
 import { SummaryService } from './summary.service';
 import { TasksService } from './tasks.service';
+import { SyncService } from './sync.service';
 
 @Module({
-  providers: [ObservableService, SummaryService, TasksService],
+  providers: [ObservableService, SummaryService, TasksService, SyncService],
   imports: [ExternalApiModule, MailerModule],
-  exports: [ObservableService, SummaryService, TasksService],
+  exports: [ObservableService, SummaryService, TasksService, SyncService],
 })
 export class ObserveModule {}
