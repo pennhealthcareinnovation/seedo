@@ -26,5 +26,5 @@ export interface Procedure {
   logID?: number,
   typeID: number | string,
   role: number,
-  quantity: number
+  qty: number
 }
