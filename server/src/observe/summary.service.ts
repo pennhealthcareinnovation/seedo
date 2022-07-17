@@ -98,7 +98,7 @@ export class SummaryService {
    * Build and send summaries to trainees who have observations that occurred yesterday
    *  */
   async sendSummaries() {
-    const startDate = startOfDay(add(new Date(), { days: -7 }))
+    const startDate = add(startOfDay(new Date()), { days: -6 })
     const endDate = new Date()
 
     /** Trainess with observations from yesterday */
