@@ -153,7 +153,7 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
                   component: false,
                   icon: 'Reset',
                   handler: async (req, res, context) => {
-                    await tasksService.syncObservations()
+                    // await tasksService.syncObservations()
                     return {
                       notice: {
                         type: 'success',

@@ -18,67 +18,6 @@ export class TasksService {
     private prismaService: PrismaService,
   ) { }
 
-  async syncObservations() {
-    const observations = await this.prismaService.observations.findMany({
-      where: { syncedAt: undefined },
-      include: {
-        trainee: true,
-        task: {
-          include: {
-            procedureType: true
-          }
-        }
-      }
-    })
-
-    const synced = await Promise.all(observations.slice(0, 5).map(async obs => {
-      const log: ProcedureLog = {
-        userID: obs.trainee.medhubUserId,
-        date: obs.observationDate,
-        fields: {
-          patientID: obs.patientId,
-          patient_age: differenceInYears((obs.data as any)?.patientBirthDate, new Date()),
-          patient_gender: (obs.data as any)?.patientGender
-        }
-      }
-      const logResult = await this.medhubService.request({
-        endpoint: 'procedures/record',
-        request: log
-      })
-
-      const procedure: Procedure = {
-        logID: logResult.logID,
-        typeID: obs.task.procedureType.medhubProcedureTypeId,
-        quantity: 1,
-        role: 1
-      }
-      const appendProcedure = await this.medhubService.request({
-        endpoint: 'procedures/appendProcedure',
-        request: procedure
-      })
-      return {
-        observationId: obs.id,
-        medhubLogId: logResult.logID.toString(),
-        medhubProcedureId: appendProcedure.procedureID.toString()
-      }
-    }))
-
-    const update = await this.prismaService.$transaction(
-      synced.map(({ observationId, medhubLogId, medhubProcedureId }) =>
-        this.prismaService.observations.update({
-          where: { id: observationId },
-          data: {
-            medhubProcedureId,
-            medhubLogId, 
-            syncedAt: new Date(),
-          }
-        })
-      )
-    )
-
-    return update
-  }
-
   async runAllTasks() {
     const tasks = await this.prismaService.tasks.findMany()
     const runTasks = await Promise.all(tasks.map(async task => await this.runCollectionTask(task.id)))
