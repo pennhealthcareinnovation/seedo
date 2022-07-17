@@ -17,15 +17,14 @@ export class SummaryService {
   intro(args: any) {
     return template(`
       <mj-text align="left" font-size="20px" color="#00144D" font-family="helvetica">
-        Seedo - Automated Procedure Logging
+        Seedo - Weekly Procedure Summary
       </mj-text>
       <mj-spacer height="10px" />
 
       <mj-text align="left" font-size="12px"font-family="helvetica">
         Hey <%= trainee.firstName %>, <br />
-        <p>The below procedures have been logged based on your clinical activity. Soon we'll begin logging them to MedHub automatically for you. Do they look accurate? </p>
-        <p>I've added stress echos (dobutamine and exercise) as well as TEEs. </p>
-        <p>Would you prefer to receive an email like this daily or at the end of the week?</p>   
+        <p>The below procedures have been logged based on your clinical activity.</p>
+        <p>Soon we'll begin logging them to MedHub automatically for you. Stay tuned!</p>
       </mj-text>
       <br />
     `)(args)
@@ -127,10 +126,10 @@ export class SummaryService {
         const email: Email = {
           to: summary.trainee.email,
           from: 'emeka.anyanwu@pennmedicine.upenn.edu',
-          subject: 'Seedo - Procedure Summary (Beta)',
+          subject: 'Seedo - Weekly Procedure Summary (Beta)',
           text: 'This email can only be viewed in HTML/rich text mode',
           html,
-          initiatorType: 'daily_summary'
+          initiatorType: 'summary'
         }
         return await this.mailerService.sendEmail(email)
       })
