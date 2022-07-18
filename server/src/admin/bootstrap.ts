@@ -39,12 +39,11 @@ class customLoader extends ExpressLoader {
 
 export const AdminModuleBootstrap = AdminModule.createAdminAsync({
   imports: [PrismaModule, ProgramModule, ObserveModule],
-  inject: [PrismaService, ProgramService, TraineeService, TasksService],
+  inject: [PrismaService, ProgramService, TasksService],
   customLoader,
   useFactory: async (
     prisma: PrismaService,
     programService: ProgramService,
-    traineeService: TraineeService,
     tasksService: TasksService,
   ) => {
     const dmmf = ((prisma as any)._dmmf as DMMFClass)
@@ -126,12 +125,13 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
                   component: false,
                   icon: 'Reset'
                 },
-                loadTraineesFromMedhub: {
+                reloadMedhubPersonnel: {
                   actionType: 'record',
                   isVisible: true,
                   handler: async (req, res, context) => {
                     const program = context.record.params as any
-                    await traineeService.reloadProgramTrainees(program.id)
+                    await programService.reloadProgramFaculty(program.id)
+                    await programService.reloadProgramTrainees(program.id)
                     return { record: context.record.toJSON() }
                   },
                   component: false,
