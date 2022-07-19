@@ -2,7 +2,7 @@ export interface ProcedureLog {
   logID?: number
   
   /** The trainee that the procedure log belongs to */
-  userID: number | string
+  userID: number
 
   /** Date the pocedures ocurred on */
   date: Date
@@ -27,4 +27,13 @@ export interface Procedure {
   typeID: number | string,
   role: number,
   qty: number
+}
+
+export interface VerifyArguments {
+  procedureID: number
+
+  supervisorID: ProcedureLog['supervisorID']
+
+  /** 1: Confirmed, 2: Rejected */
+  status: 1 | 2
 }

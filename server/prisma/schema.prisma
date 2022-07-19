@@ -64,11 +64,13 @@ model faculty {
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt
   
   program        programs @relation(fields: [programId], references: [id])
+  supervisedObservations observations[]
 }
 
 model observations {
   id              Int       @id @default(autoincrement())
   traineeId       Int
+  supervisingFacultyId Int?
   
   // The task that created this observation
   taskId          Int
@@ -103,6 +105,7 @@ model observations {
   
   trainee         trainees  @relation(fields: [traineeId], references: [id])
   task            tasks     @relation(fields: [taskId], references: [id])
+  supervisingFaculty faculty? @relation(fields: [supervisingFacultyId], references: [id])
 
   @@unique([traineeId, ehrObservationId, ehrObservationIdType])
 }
