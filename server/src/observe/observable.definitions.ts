@@ -20,6 +20,8 @@ export type ObservableQueryResult = Omit<
 > & {
   providerId: string
   providerIdType: string
+  supervisorId: string
+  supervisorIdType: string
 }
 
 export interface varsFactory {

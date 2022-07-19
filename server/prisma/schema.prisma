@@ -16,6 +16,7 @@ model programs {
   createdAt DateTime   @db.Timestamptz(6) @default(now())
   updatedAt DateTime   @db.Timestamptz(6) @updatedAt
   trainees  trainees[]
+  faculty   faculty[]
   tasks tasks[]
   procedureTypes procedureTypes[]
 }
@@ -50,9 +51,26 @@ model trainees {
   observations    observations[]
 }
 
+model faculty {
+  id             Int      @id @default(autoincrement())
+  programId       Int
+  medhubUserId    String   @unique() @db.VarChar(255)
+  email           String   @unique() @db.VarChar(320)
+  employeeId       String   @unique() @db.VarChar(255)
+  lastName        String?  @db.VarChar(255)
+  firstName       String?  @db.VarChar(255)
+
+  createdAt       DateTime @db.Timestamptz(6) @default(now())
+  updatedAt       DateTime @db.Timestamptz(6) @updatedAt
+  
+  program        programs @relation(fields: [programId], references: [id])
+  supervisedObservations observations[]
+}
+
 model observations {
   id              Int       @id @default(autoincrement())
   traineeId       Int
+  supervisingFacultyId Int?
   
   // The task that created this observation
   taskId          Int
@@ -87,6 +105,7 @@ model observations {
   
   trainee         trainees  @relation(fields: [traineeId], references: [id])
   task            tasks     @relation(fields: [taskId], references: [id])
+  supervisingFaculty faculty? @relation(fields: [supervisingFacultyId], references: [id])
 
   @@unique([traineeId, ehrObservationId, ehrObservationIdType])
 }

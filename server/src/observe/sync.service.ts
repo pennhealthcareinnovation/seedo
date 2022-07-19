@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { observations, faculty, Prisma } from '@prisma/client';
+import * as shortUUID from 'short-uuid';
 import { differenceInYears, startOfDay, sub } from 'date-fns';
 
 import { MedhubService } from '../external-api/medhub/medhub.service';
-import { Procedure, ProcedureLog } from '../external-api/medhub/medhub.types';
+import { Procedure, ProcedureLog, VerifyArguments } from '../external-api/medhub/medhub.types';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -16,17 +17,39 @@ export class SyncService {
   private readonly logger = new Logger(SyncService.name)
 
   /**
+   * Verify a synced observation in Medhub
+   * NOTE: only observations with a supervisorId can be verified
+   */
+  async verifyObservation(observation: observations & { supervisingFaculty: faculty }) {
+    if (!observation.supervisingFaculty) {
+      throw new Error('Observation must have a supervising faculty to sync to Medhub')
+    }
+
+    const request: VerifyArguments = {
+      procedureID: parseInt(observation.medhubProcedureId),
+      supervisorID: parseInt(observation.supervisingFaculty.medhubUserId),
+      status: 1,
+    }
+
+    return await this.medhubService.request({
+      endpoint: 'procedures/verify',
+      request
+    })
+  }
+
+  /**
    * Find observations that are a week old and sync them to Medhub
    * @returns 
    */
   async syncToMedhub() {
     const observations = await this.prismaService.observations.findMany({
       where: {
-        observationDate: { lte: sub(startOfDay(new Date()), { days: 6 }) },
+        observationDate: { lt: sub(startOfDay(new Date()), { days: 6 }) },
         syncedAt: null
       },
       include: {
         trainee: true,
+        supervisingFaculty: true,
         task: {
           include: {
             procedureType: true
@@ -35,24 +58,26 @@ export class SyncService {
       }
     })
 
-    const synced = await Promise.all(observations.slice(0, 3).map(async obs => {
-      /** Create a UUID to attach to Medhub record */
-      const medhubPatientId = `seedo-${randomUUID()}`
+    const synced = await Promise.all(observations.map(async obs => {
+      /** Create a short UUID to attach to Medhub record for easier lookup */
+      obs.medhubPatientId = shortUUID.generate()
 
       const logParams: ProcedureLog = {
-        userID: obs.trainee.medhubUserId,
+        userID: parseInt(obs.trainee.medhubUserId),
         date: obs.observationDate,
+        supervisorID: parseInt(obs?.supervisingFaculty.medhubUserId),
         fields: {
-          patientID: medhubPatientId,
+          patientID: obs.medhubPatientId,
           patient_age: differenceInYears(new Date(), new Date((obs.data as any)?.patientBirthDate)),
-          patient_gender: (obs.data as any)?.patientGender
+          patient_gender: (obs.data as any)?.patientGender,
+          notes: "Logged by Seedo"
         }
       }
       const log = await this.medhubService.request({
         endpoint: 'procedures/record',
         request: logParams
       })
-      const medhubLogId = log.logID.toString()
+      obs.medhubLogId = log.logID.toString()
 
       const procedureParams: Procedure = {
         logID: log.logID,
@@ -64,26 +89,25 @@ export class SyncService {
         endpoint: 'procedures/appendProcedure',
         request: procedureParams
       })
-      const medhubProcedureId = procedure.procedureID.toString()
+      obs.medhubProcedureId = procedure.procedureID.toString()
 
-      this.logger.debug(`synced observation id: ${obs.id}, medhubProcedureId: ${medhubProcedureId}, medhubLogId: ${medhubLogId}, medhubPatientId: ${medhubPatientId}`)
-
-      return {
-        observationId: obs.id,
-        medhubLogId,
-        medhubProcedureId,
-        medhubPatientId
+      if (obs?.supervisingFaculty) {
+        await this.verifyObservation(obs)
       }
+
+      this.logger.debug(`synced observation id: ${obs.id}, medhubProcedureId: ${obs.medhubProcedureId}, medhubLogId: ${obs.medhubLogId}, medhubPatientId: ${obs.medhubPatientId}`)
+
+      return obs
     }))
 
     const update = await this.prismaService.$transaction(
-      synced.map(({ observationId, medhubLogId, medhubProcedureId, medhubPatientId }) =>
+      synced.map((obs) =>
         this.prismaService.observations.update({
-          where: { id: observationId },
+          where: { id: obs.id },
           data: {
-            medhubPatientId,
-            medhubProcedureId,
-            medhubLogId,
+            medhubPatientId: obs.medhubPatientId,
+            medhubProcedureId: obs.medhubProcedureId,
+            medhubLogId: obs.medhubLogId,
             syncedAt: new Date(),
           }
         })

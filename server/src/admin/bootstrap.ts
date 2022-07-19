@@ -37,14 +37,20 @@ class customLoader extends ExpressLoader {
   }
 }
 
+const medhubUneditableResourceActions = {
+  edit: { isAccessible: false, isVisible: false },
+  new: { isAccessible: false, isVisible: false },
+  delete: { isAccessible: false, isVisible: false },
+  bulkDelete: { isAccessible: false, isVisible: false },
+}
+
 export const AdminModuleBootstrap = AdminModule.createAdminAsync({
   imports: [PrismaModule, ProgramModule, ObserveModule],
-  inject: [PrismaService, ProgramService, TraineeService, TasksService],
+  inject: [PrismaService, ProgramService, TasksService],
   customLoader,
   useFactory: async (
     prisma: PrismaService,
     programService: ProgramService,
-    traineeService: TraineeService,
     tasksService: TasksService,
   ) => {
     const dmmf = ((prisma as any)._dmmf as DMMFClass)
@@ -58,11 +64,21 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
           sentEmails(prisma),    
           {
             resource: { model: dmmf.modelMap.procedureTypes, client: prisma },
-            options: {}
+            options: {
+              actions: medhubUneditableResourceActions
+            }
           },
           {
             resource: { model: dmmf.modelMap.trainees, client: prisma },
-            options: {}
+            options: {
+              actions: medhubUneditableResourceActions
+            }
+          },
+          {
+            resource: { model: dmmf.modelMap.faculty, client: prisma },
+            options: {
+              actions: medhubUneditableResourceActions
+            }
           },
           {
             resource: { model: dmmf.modelMap.tasks, client: prisma },
@@ -99,17 +115,6 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
             resource: { model: dmmf.modelMap.programs, client: prisma },
             options: {
               actions: {
-                reloadProecureTypes: {
-                  actionType: 'record',
-                  isVisible: true,
-                  handler: async (req, res, context): Promise<ActionResponse> => {
-                    const program = context.record.params as any
-                    await programService.reloadProcedureTypes(program.id)
-                    return { record: context.record.toJSON() }
-                  },
-                  component: false,
-                  icon: 'Reset'
-                },
                 reloadFromMedhub: {
                   actionType: 'resource',
                   isVisible: true,
@@ -126,12 +131,14 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
                   component: false,
                   icon: 'Reset'
                 },
-                loadTraineesFromMedhub: {
+                refreshMedhubData: {
                   actionType: 'record',
                   isVisible: true,
                   handler: async (req, res, context) => {
                     const program = context.record.params as any
-                    await traineeService.reloadProgramTrainees(program.id)
+                    await programService.reloadProcedureTypes(program.id)
+                    await programService.reloadProgramFaculty(program.id)
+                    await programService.reloadProgramTrainees(program.id)
                     return { record: context.record.toJSON() }
                   },
                   component: false,

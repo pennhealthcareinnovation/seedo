@@ -13,36 +13,5 @@ export class TraineeService {
     private prismaService: PrismaService
   ) {}
 
-  async reloadProgramTrainees(programId: number) {
-    const program = await this.prismaService.programs.findUnique({ where: { id: programId } })
-    const trainees = await this.medhubService.request({
-      endpoint: `users/residents`,
-      request: { programID: program.medhubProgramId }
-    })
 
-    const newTrainees = trainees.map((trainee): Prisma.traineesCreateInput => ({
-      medhubUserId: trainee.userID,
-      email: trainee.email,
-      employeeId: trainee.employeeID,
-      lastName: trainee.name_last,
-      firstName: trainee.name_first,
-      data: trainee,
-      
-      programs: {
-        connect: { id: program.id }
-      }
-    }))
-
-    await this.prismaService.$transaction(
-      newTrainees.map(trainee =>
-        this.prismaService.trainees.upsert({
-          where: { medhubUserId: trainee.medhubUserId },
-          create: trainee,
-          update: trainee
-        })
-      )
-    )
-
-    return await this.prismaService.trainees.findMany()
-  }
 }
