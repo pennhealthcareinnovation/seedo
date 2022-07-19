@@ -44,7 +44,7 @@ export class SyncService {
   async syncToMedhub() {
     const observations = await this.prismaService.observations.findMany({
       where: {
-        observationDate: { lte: sub(startOfDay(new Date()), { days: 6 }) },
+        observationDate: { lt: sub(startOfDay(new Date()), { days: 6 }) },
         syncedAt: null
       },
       include: {
@@ -58,7 +58,7 @@ export class SyncService {
       }
     })
 
-    const synced = await Promise.all(observations.slice(0, 3).map(async obs => {
+    const synced = await Promise.all(observations.map(async obs => {
       /** Create a short UUID to attach to Medhub record for easier lookup */
       obs.medhubPatientId = shortUUID.generate()
 
