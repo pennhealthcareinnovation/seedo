@@ -10,7 +10,25 @@ export class ProgramService {
     private medhubService: MedhubService,
     private prismaService: PrismaService
   ) {}
-  
+
+  /**
+   * Get "active" programs - programs which have at least one defined task
+   */
+  async activePrograms() {
+    const programs = await this.prismaService.programs.findMany({
+      include: {
+        _count: {
+          select: {
+            tasks: true
+          }
+        }
+      }
+    })
+    const activeProgrmas = programs.filter(program => program._count.tasks > 0)
+
+    return activeProgrmas
+  }
+
   /**
    * Pull and upsert programs from MedHub
    */
