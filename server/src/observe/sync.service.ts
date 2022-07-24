@@ -31,21 +31,28 @@ export class SyncService {
       status: 1,
     }
 
-    return await this.medhubService.request({
+    const result = await this.medhubService.request({
       endpoint: 'procedures/verify',
       request
     })
+
+    this.logger.debug(`verified procedure from obs: ${observation.id}, medhubProcedureId: ${observation.medhubProcedureId}`)
+
+    return result
   }
 
   /**
-   * Find observations that are a week old and sync them to Medhub
+   * Sync observations to MedHub that are a week old, and have supervisor
    * @returns 
    */
   async syncToMedhub() {
     const observations = await this.prismaService.observations.findMany({
       where: {
         observationDate: { lt: sub(startOfDay(new Date()), { days: 6 }) },
-        syncedAt: null
+        syncedAt: null,
+        supervisingFaculty: {
+          isNot: null,
+        }
       },
       include: {
         trainee: true,
@@ -65,7 +72,7 @@ export class SyncService {
       const logParams: ProcedureLog = {
         userID: parseInt(obs.trainee.medhubUserId),
         date: obs.observationDate,
-        supervisorID: parseInt(obs?.supervisingFaculty.medhubUserId),
+        supervisorID: parseInt(obs?.supervisingFaculty?.medhubUserId),
         fields: {
           patientID: obs.medhubPatientId,
           patient_age: differenceInYears(new Date(), new Date((obs.data as any)?.patientBirthDate)),
