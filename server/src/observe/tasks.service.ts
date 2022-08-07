@@ -33,18 +33,19 @@ export class TasksService {
         }
       }
     })
-    this.logger.log(`[TASK ${task.id}] BEGIN -- PROGRAM: ${task.program.name}, OSERVABLE: ${ObservablesDefinitions[task.observableType].displayName}`)
+    this.logger.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName}`)
 
     if (!ObservablesDefinitions?.[task.observableType])
       throw new Error(`Unknown observable type: ${task.observableType}`)
 
-    this.logger.log(`[TASK ${task.id}] BEGIN collection (Clarity query)`)
+    const startTime = process.hrtime()
     const trainees = task.program.trainees
     const observables = await this.observableService.run({
       type: task.observableType,
       args: task.args
     })
-    this.logger.log(`[TASK ${task.id}] END collection (Clarity query)`)
+    const elapsed = process.hrtime(startTime)
+    const elapsedSeconds = (elapsed[0] + elapsed[1] / 1e9).toFixed(3)
 
     /** Create observations */
     let unqiueTrainees = 0
@@ -94,8 +95,7 @@ export class TasksService {
         })
       )
     )
-    this.logger.log(`[TASK ${task.id}] Collected ${newObservations.length} observations for ${unqiueTrainees} trainees.`)
-    this.logger.log(`[TASK ${task.id}] END`)
+    this.logger.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`)
 
     return transaction
   }

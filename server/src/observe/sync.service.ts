@@ -1,11 +1,28 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { observations, faculty, Prisma } from '@prisma/client';
+import { observations, faculty, trainees, tasks, procedureTypes } from '@prisma/client';
 import * as shortUUID from 'short-uuid';
 import { differenceInYears, startOfDay, sub } from 'date-fns';
 
 import { MedhubService } from '../external-api/medhub/medhub.service';
 import { Procedure, ProcedureLog, VerifyArguments } from '../external-api/medhub/medhub.types';
 import { PrismaService } from '../prisma/prisma.service';
+import { chunk } from 'lodash';
+import { setTimeout } from 'timers/promises';
+
+/** How many observations to sync concurrently */
+const SYNC_BATCH_SIZE = 10;
+/** How long to wait between batches */
+const SYNC_BATCH_DELAY_SECONDS = 2;
+
+type fullyPopulatedObservation = (
+  observations & {
+    supervisingFaculty: faculty,
+    trainee: trainees,
+    task: (tasks & {
+      procedureType: procedureTypes
+    })
+  }
+)
 
 @Injectable()
 export class SyncService {
@@ -16,29 +33,68 @@ export class SyncService {
 
   private readonly logger = new Logger(SyncService.name)
 
-  /**
-   * Verify a synced observation in Medhub
-   * NOTE: only observations with a supervisorId can be verified
-   */
-  async verifyObservation(observation: observations & { supervisingFaculty: faculty }) {
-    if (!observation.supervisingFaculty) {
-      throw new Error('Observation must have a supervising faculty to sync to Medhub')
+
+  async syncObservation(obs: fullyPopulatedObservation) {
+    try {
+      /** Create a short UUID to attach to Medhub record for easier lookup */
+      obs.medhubPatientId = shortUUID.generate()
+
+      /**
+       * Create a MedHub log for the observation
+       */
+      const logParams: ProcedureLog = {
+        userID: parseInt(obs.trainee.medhubUserId),
+        date: obs.observationDate,
+        supervisorID: parseInt(obs?.supervisingFaculty?.medhubUserId),
+        fields: {
+          patientID: obs.medhubPatientId,
+          patient_age: differenceInYears(new Date(), new Date((obs.data as any)?.patientBirthDate)),
+          patient_gender: (obs.data as any)?.patientGender,
+          notes: "Logged by Seedo"
+        }
+      }
+      const log = await this.medhubService.request({
+        endpoint: 'procedures/record',
+        request: logParams
+      })
+      obs.medhubLogId = log.logID.toString()
+
+      /** 
+       * Append procedure the created MedHub log 
+       */
+      const procedureParams: Procedure = {
+        logID: log.logID,
+        typeID: obs.task.procedureType.medhubProcedureTypeId,
+        qty: 1,
+        role: 1,
+      }
+      const procedure = await this.medhubService.request({
+        endpoint: 'procedures/appendProcedure',
+        request: procedureParams
+      })
+      obs.medhubProcedureId = procedure.procedureID.toString()
+
+      /**
+       * Verify the procedure with the supervisingFaculty
+       */
+      const request: VerifyArguments = {
+        procedureID: parseInt(obs.medhubProcedureId),
+        supervisorID: parseInt(obs.supervisingFaculty.medhubUserId),
+        status: 1,
+      }
+      const verification = await this.medhubService.request({
+        endpoint: 'procedures/verify',
+        request
+      })
+
+      this.logger.log(`synced/verified observation id: ${obs.id}, medhubProcedureId: ${obs.medhubProcedureId}, medhubLogId: ${obs.medhubLogId}, medhubPatientId: ${obs.medhubPatientId}`)
+
+      return obs
+    } catch (e) {
+
+      this.logger.error(`error syncing observation id: ${obs.id}: ${e}`)
+      return undefined
     }
-
-    const request: VerifyArguments = {
-      procedureID: parseInt(observation.medhubProcedureId),
-      supervisorID: parseInt(observation.supervisingFaculty.medhubUserId),
-      status: 1,
-    }
-
-    const result = await this.medhubService.request({
-      endpoint: 'procedures/verify',
-      request
-    })
-
-    this.logger.debug(`verified procedure from obs: ${observation.id}, medhubProcedureId: ${observation.medhubProcedureId}`)
-
-    return result
   }
 
   /**
@@ -46,6 +102,12 @@ export class SyncService {
    * @returns 
    */
   async syncToMedhub() {
+    /**
+     * Fetch observations that:
+     * - haven't been synced
+     * - are at least a week old from the day of the observation (observationDate)
+     * - have a supervisingFaculty populated
+     */
     const observations = await this.prismaService.observations.findMany({
       where: {
         observationDate: { lt: sub(startOfDay(new Date()), { days: 6 }) },
@@ -65,51 +127,21 @@ export class SyncService {
       }
     })
 
-    const synced = await Promise.all(observations.map(async obs => {
-      /** Create a short UUID to attach to Medhub record for easier lookup */
-      obs.medhubPatientId = shortUUID.generate()
+    /** Sync in batches to avoid overwhelming the MedHub API */
+    const batches = chunk(observations, SYNC_BATCH_SIZE)
+    let synced: fullyPopulatedObservation[] = []
+    for (const batch of batches) {
+      const batchResult = await Promise.all(batch.map(obs => this.syncObservation(obs)))
+      synced.push(...batchResult)
 
-      const logParams: ProcedureLog = {
-        userID: parseInt(obs.trainee.medhubUserId),
-        date: obs.observationDate,
-        supervisorID: parseInt(obs?.supervisingFaculty?.medhubUserId),
-        fields: {
-          patientID: obs.medhubPatientId,
-          patient_age: differenceInYears(new Date(), new Date((obs.data as any)?.patientBirthDate)),
-          patient_gender: (obs.data as any)?.patientGender,
-          notes: "Logged by Seedo"
-        }
-      }
-      const log = await this.medhubService.request({
-        endpoint: 'procedures/record',
-        request: logParams
-      })
-      obs.medhubLogId = log.logID.toString()
+      this.logger.debug(`waiting ${SYNC_BATCH_DELAY_SECONDS} seconds before next batch of ${SYNC_BATCH_SIZE}`)
+      await setTimeout(SYNC_BATCH_DELAY_SECONDS * 1000)
+    }
 
-      const procedureParams: Procedure = {
-        logID: log.logID,
-        typeID: obs.task.procedureType.medhubProcedureTypeId,
-        qty: 1,
-        role: 1,
-      }
-      const procedure = await this.medhubService.request({
-        endpoint: 'procedures/appendProcedure',
-        request: procedureParams
-      })
-      obs.medhubProcedureId = procedure.procedureID.toString()
-
-      if (obs?.supervisingFaculty) {
-        await this.verifyObservation(obs)
-      }
-
-      this.logger.debug(`synced observation id: ${obs.id}, medhubProcedureId: ${obs.medhubProcedureId}, medhubLogId: ${obs.medhubLogId}, medhubPatientId: ${obs.medhubPatientId}`)
-
-      return obs
-    }))
-
+    /** Update all synced observations */
     const update = await this.prismaService.$transaction(
-      synced.map((obs) =>
-        this.prismaService.observations.update({
+      synced.filter(obs => obs !== undefined)
+        .map((obs) => this.prismaService.observations.update({
           where: { id: obs.id },
           data: {
             medhubPatientId: obs.medhubPatientId,
@@ -120,6 +152,7 @@ export class SyncService {
         })
       )
     )
+    this.logger.debug(`updated observation sync data for ${synced.length} observations`)
 
     return update
   }
