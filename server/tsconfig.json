@@ -21,6 +21,7 @@
     "paths": {
       "@seedo/server/*": ["./*"],
     },
+    "types": ["jest", "node", "@types/jest"],
     "typeRoots": [
       "./src/types",
       "./node_modules/@types"
