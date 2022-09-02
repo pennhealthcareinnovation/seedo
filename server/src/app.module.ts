@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import AdminJS from 'adminjs';
 import { Database, Resource } from '@adminjs/prisma';
 import { ConfigModule } from '@nestjs/config';
-import { RenderModule } from 'nest-next'
-import Next from 'next'
 
 import { AppController } from './app.controller';
 import { ExternalApiModule } from './external-api/external-api.module';
