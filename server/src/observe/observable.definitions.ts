@@ -54,13 +54,16 @@ export interface ObservableDefintion {
   queryFile?: string
 
   displayName: string
+  /** Type of identifier for each observation within the EHR (i.e. accession number, note id, etc.) */
+  ehrObservationIdType: string
   varsFactory?: (args: any) => any
 }
 
 export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
   cardiology_tte_read: {
     type: 'cardiology_tte_read',
-    displayName: 'Cardiology - Transthoracic Echo Read',
+    displayName: 'Transthoracic Echo',
+    ehrObservationIdType: 'accession',
     varsFactory: (args: varsFactory) => ([
       { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
       { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
@@ -69,7 +72,8 @@ export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
 
   cardiology_exercise_stress_echo: {
     type: 'cardiology_exercise_stress_echo',
-    displayName: 'Cardiology - Exercise Stress Echo',
+    displayName: 'Exercise Stress Echo',
+    ehrObservationIdType: 'accession',
     varsFactory: (args: varsFactory) => ([
       { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
       { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
@@ -78,7 +82,8 @@ export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
 
   cardiology_dobutamine_stress_echo: {
     type: 'cardiology_dobutamine_stress_echo',
-    displayName: 'Cardiology - Dobutamine Stress Echo',
+    displayName: 'Dobutamine Stress Echo',
+    ehrObservationIdType: 'accession',
     varsFactory: (args: varsFactory) => ([
       { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
       { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
@@ -87,7 +92,8 @@ export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
 
   cardiology_tee_read: {
     type: 'cardiology_tee_read',
-    displayName: 'Cardiology - Transesophageal Echo Read',
+    displayName: 'Transesophageal Echo',
+    ehrObservationIdType: 'accession',
     varsFactory: (args: varsFactory) => ([
       { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
       { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) },

@@ -6,13 +6,15 @@ import { add, format, startOfDay } from 'date-fns';
 import { PrismaService } from '../prisma/prisma.service';
 import { Email, MailerService } from '../mailer/mailer.service';
 import { ObservableDefintion, ObservablesDefinitions } from './observable.definitions';
+import { ObservableService } from './observable.service';
 
 @Injectable()
 export class SummaryService {
   private logger = new Logger(SummaryService.name)
   constructor(
     private prismaService: PrismaService,
-    private mailerService: MailerService
+    private mailerService: MailerService,
+    private observableService: ObservableService
   ) { }
   intro(args: any) {
     return template(`
@@ -63,18 +65,7 @@ export class SummaryService {
    */
   async summaryForTrainee({ traineeId, startDate, endDate }: { traineeId: number, startDate: Date, endDate: Date }) {
     const trainee = await this.prismaService.trainees.findUnique({ where: { id: traineeId } })
-    const observations = await this.prismaService.observations.findMany({
-      where: {
-        traineeId,
-        observationDate: {
-          gte: startDate,
-          lte: endDate
-        }
-      },
-      include: {
-        task: true
-      }
-    })
+    const observations = await this.observableService.observationsForTrainee({ traineeId, startDate, endDate })
 
     const groupedObservations = groupBy(observations, 'task.observableType')
     const blocks = Object.entries(groupedObservations).map(([type, observations]) => {
