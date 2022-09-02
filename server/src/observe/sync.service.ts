@@ -8,6 +8,7 @@ import { Procedure, ProcedureLog, VerifyArguments } from '../external-api/medhub
 import { PrismaService } from '../prisma/prisma.service';
 import { chunk } from 'lodash';
 import { setTimeout } from 'timers/promises';
+import { ConfigService } from '@nestjs/config';
 
 /** How many observations to sync concurrently */
 const SYNC_BATCH_SIZE = 10;
@@ -29,6 +30,7 @@ export class SyncService {
   constructor(
     private medhubService: MedhubService,
     private prismaService: PrismaService,
+    private configService: ConfigService
   ) { }
 
   private readonly logger = new Logger(SyncService.name)
@@ -147,6 +149,7 @@ export class SyncService {
             medhubPatientId: obs.medhubPatientId,
             medhubProcedureId: obs.medhubProcedureId,
             medhubLogId: obs.medhubLogId,
+            medhubEndpointUrl: this.configService.getOrThrow<string>('MEDHUB_BASE_URL'),
             syncedAt: new Date(),
           }
         })

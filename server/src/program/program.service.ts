@@ -134,7 +134,7 @@ export class ProgramService {
       firstName: trainee.name_first,
       data: trainee,
 
-      programs: {
+      program: {
         connect: { id }
       }
     }))
