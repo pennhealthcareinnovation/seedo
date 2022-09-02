@@ -1,6 +1,6 @@
 # compiled output
 /dist
-/node_modules
+**/node_modules
 
 # Logs
 logs
@@ -38,3 +38,4 @@ lerna-debug.log*
 
 **/dist/*
 db
+.next

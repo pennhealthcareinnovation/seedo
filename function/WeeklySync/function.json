@@ -4,7 +4,7 @@
       "name": "dailyTimer",
       "type": "timerTrigger",
       "direction": "in",
-      "schedule": "0 0 12 * * 6"
+      "schedule": "0 0 4 * * 6"
     }
   ],
   "scriptFile": "../dist/function/WeeklySync/index.js"

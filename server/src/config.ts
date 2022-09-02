@@ -22,22 +22,29 @@ export async function configuration() {
   let config = {}
   let report = ''
   for await (const setting of settingsIterator) {
-    if (isSecretReference(setting)) {
-      const parsedSecretRef = parseSecretReference(setting)
-      const { name: secretName, vaultUrl } = parseKeyVaultSecretIdentifier(parsedSecretRef.value.secretId)
-      const secretClient = new SecretClient(vaultUrl, new DefaultAzureCredential());
-      const secret = await secretClient.getSecret(secretName)
-      config[setting.key] = secret.value
-      report += `\n ${setting.key}: ***`
+    // allow local environment variables to override cloud config values
+    if (process.env?.[setting.key]) {
+      config[setting.key] = process.env[setting.key]
+      report += `\n [LOCAL .ENV] ${setting.key}: ***`
     } else {
-      config[setting.key] = setting.value
-      report += `\n ${setting.key}: ${setting.value}`
-    }
 
-    if (setting.contentType.toLowerCase() == 'boolean')
-      config[setting.key] = ['true', '1'].includes(config[setting.key].toLowerCase())
-    else if (setting.contentType.toLowerCase() == 'integer')
-      config[setting.key] = parseInt(config[setting.key])
+      if (isSecretReference(setting)) {
+        const parsedSecretRef = parseSecretReference(setting)
+        const { name: secretName, vaultUrl } = parseKeyVaultSecretIdentifier(parsedSecretRef.value.secretId)
+        const secretClient = new SecretClient(vaultUrl, new DefaultAzureCredential());
+        const secret = await secretClient.getSecret(secretName)
+        config[setting.key] = secret.value
+        report += `\n ${setting.key}: ***`
+      } else {
+        config[setting.key] = setting.value
+        report += `\n ${setting.key}: ${setting.value}`
+      }
+
+      if (setting.contentType.toLowerCase() == 'boolean')
+        config[setting.key] = ['true', '1'].includes(config[setting.key].toLowerCase())
+      else if (setting.contentType.toLowerCase() == 'integer')
+        config[setting.key] = parseInt(config[setting.key])
+    }
   }
 
   logger.log(`Azure App Config (filters: ${APP_CONFIG_FILTER.replace(/,/g, ', ')}): ${report}`)

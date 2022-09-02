@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Router } from 'express';
@@ -8,6 +9,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get<ConfigService>(ConfigService)
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Seedo')
@@ -15,7 +17,7 @@ async function bootstrap() {
     .setVersion('1.0.0')
     .build()
   const document = SwaggerModule.createDocument(app, swaggerConfig)
-  SwaggerModule.setup('api', app, document)
+  // SwaggerModule.setup('api', app, document)
 
   /** Express instance */
   const expressInstance = app.getHttpAdapter().getInstance();
@@ -32,6 +34,8 @@ async function bootstrap() {
     saveUninitialized: false,
   }))
 
-  await app.listen(3000);
+  const SERVER_PORT = configService.get('SERVER_PORT')
+  await app.listen(SERVER_PORT);
+  console.log(`Seedo server listening on port ${SERVER_PORT}`)
 }
 bootstrap();

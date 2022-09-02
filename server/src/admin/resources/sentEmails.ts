@@ -10,7 +10,7 @@ export function sentEmails(prisma: PrismaService): ResourceWithOptions {
     resource: { model: dmmf.modelMap.sentEmails, client: prisma },
     options: {
       actions: {
-        show: { component: AdminJS.bundle('../components/ShowEmail.tsx') },
+        show: { component: AdminJS.bundle('../components/ShowEmail') },
         delete: { isVisible: false, isAccessible: false },
         edit: { isVisible: false, isAccessible: false },
         new: { isVisible: false, isAccessible: false }

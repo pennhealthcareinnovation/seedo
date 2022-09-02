@@ -16,6 +16,7 @@ import { MailerService } from './mailer/mailer.service';
 import { MailerModule } from './mailer/mailer.module';
 import { configuration } from './config';
 import { UtilitiesModule } from './utilities/utilities.module';
+import { ViewModule } from './view/view.module';
 
 AdminJS.registerAdapter({ Resource, Database })
 
@@ -31,6 +32,10 @@ AdminJS.registerAdapter({ Resource, Database })
     ProgramModule,
     ObserveModule,
     UtilitiesModule,
+
+    /** The ViewModule has a catch all * url so it should be loaded last! */
+    ViewModule,
+    // RenderModule.forRootAsync(Next({ dev: true, dir: './client' }), { viewsDir: './client/pages' }),
   ],
   controllers: [AppController],
   providers: [

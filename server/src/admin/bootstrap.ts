@@ -95,7 +95,7 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
                     label: obs.displayName,
                     value: obs.type
                   }))
-                }
+                },
               },
               actions: {
                 runTask: {
@@ -107,7 +107,15 @@ export const AdminModuleBootstrap = AdminModule.createAdminAsync({
                   },
                   component: false,
                   icon: 'Play'
-                }
+                },
+                // adhocRun: {
+                //   actionType: 'record',
+                //   handler: async (req, res, context) => {
+                //     const task = context.record.params
+                //     await tasksService.backfillTasks(task.id)
+                //     return { record: context.record.toJSON() }
+                //   }
+                // }
               }
             },
           },

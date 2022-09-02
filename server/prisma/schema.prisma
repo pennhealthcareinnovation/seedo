@@ -47,7 +47,7 @@ model trainees {
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt
   
-  programs        programs @relation(fields: [programId], references: [id])
+  program        programs @relation(fields: [programId], references: [id])
   observations    observations[]
 }
 
@@ -95,10 +95,12 @@ model observations {
   // NOTES:
   // A log can contain more than one procedure.
   // medhubPatientId is a hashed EHR patient ID.
+  // May need to move sync data to a separate table if we add other APIs (i.e. ACGME)
   syncedAt             DateTime? @db.Timestamptz(6)
   medhubLogId          String? @db.VarChar(255)
   medhubProcedureId    String? @db.VarChar(255) @unique()
   medhubPatientId      String? @db.VarChar(255)
+  medhubEndpointUrl     String? @db.VarChar(255)
 
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt
