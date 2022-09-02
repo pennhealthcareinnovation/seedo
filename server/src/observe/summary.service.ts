@@ -25,8 +25,9 @@ export class SummaryService {
 
       <mj-text align="left" font-size="12px"font-family="helvetica">
         Hey <%= trainee.firstName %>, <br />
-        <p>The below procedures have been logged based on your clinical activity.</p>
-        <p>Soon we'll begin logging them to MedHub automatically for you. Stay tuned!</p>
+        <p>The below procedures have been logged based on your clinical activity over the last week.</p>
+        <p><strong>Syncing to MedHub is now live!</strong> Procedures will be synced a week after they are collected to allow time for corrections.</p>
+        <p>Please login to MedHub and let me know if you see any procedures synced that occured before the previous Saturday.</p>
       </mj-text>
       <br />
     `)(args)
@@ -117,7 +118,7 @@ export class SummaryService {
         const email: Email = {
           to: summary.trainee.email,
           from: 'emeka.anyanwu@pennmedicine.upenn.edu',
-          subject: 'Seedo - Weekly Procedure Summary (Beta)',
+          subject: 'Seedo - Weekly Procedure Summary (Beta v2)',
           text: 'This email can only be viewed in HTML/rich text mode',
           html,
           initiatorType: 'summary'
