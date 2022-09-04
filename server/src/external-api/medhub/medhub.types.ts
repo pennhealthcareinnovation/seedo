@@ -37,3 +37,20 @@ export interface VerifyArguments {
   /** 1: Confirmed, 2: Rejected */
   status: 1 | 2
 }
+
+interface MedHubUser {
+  userID: string | number
+  name_last: string
+  name_first: string
+  email: string
+  username: string
+  employeeID: string | number
+}
+
+export interface Faculty extends MedHubUser { }
+
+export interface Resident extends MedHubUser {
+  typeID: string | number
+  level: string | number
+  programID: string | number
+}
