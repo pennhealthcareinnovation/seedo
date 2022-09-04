@@ -47,7 +47,7 @@ const medhubUneditableResourceActions = {
 export const AdminModuleBootstrap = AdminModule.createAdminAsync({
   imports: [PrismaModule, ProgramModule, ObserveModule],
   inject: [PrismaService, ProgramService, TasksService],
-  customLoader,
+  // customLoader,
   useFactory: async (
     prisma: PrismaService,
     programService: ProgramService,

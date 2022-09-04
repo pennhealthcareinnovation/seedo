@@ -17,7 +17,7 @@ async function bootstrap() {
     .setVersion('1.0.0')
     .build()
   const document = SwaggerModule.createDocument(app, swaggerConfig)
-  // SwaggerModule.setup('api', app, document)
+  SwaggerModule.setup('api', app, document)
 
   /** Express instance */
   const expressInstance = app.getHttpAdapter().getInstance();
