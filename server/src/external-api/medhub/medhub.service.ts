@@ -34,19 +34,28 @@ export class MedhubService {
     const ts = getUnixTime(new Date())
     const verify = this.verifcationHash(request, ts)
 
-    const response = await axios.request({
-      method: 'POST',
-      url: `${this.config.base_url}/functions/api/${endpoint}`,
-      data: JSON.stringify({
-        clientID: this.config.client_id,
-        type: 'json',
-        ts,
-        verify,
-        request
+    try {
+      const response = await axios.request({
+        method: 'POST',
+        url: `${this.config.base_url}/functions/api/${endpoint}`,
+        data: JSON.stringify({
+          clientID: this.config.client_id,
+          type: 'json',
+          ts,
+          verify,
+          request
+        })
       })
-    })
 
-    return response.data
+      return response.data
+    } catch (error) {
+      this.logger.error(`
+        URL: ${error.config.url}
+        Request data: ${error.config.data} 
+        Response: ${JSON.stringify(error.response.data)}
+      `)
+      throw error
+    }
   }
 
   verifcationHash(request: string, ts: number) {
