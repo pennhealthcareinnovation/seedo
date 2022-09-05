@@ -61,11 +61,11 @@ export class DevController {
   async updatePersonnel() {
     /** Update MedHub data for active programs */
     const activePrograms = await this.programService.activePrograms()
-    activePrograms.forEach(async program => {
+    for (const program of activePrograms) {
       this.logger.log(`Reloading MedHub personnel for program: ${program.name}`)
       await this.programService.reloadProgramFaculty(program.id)
       await this.programService.reloadProgramTrainees(program.id)
-    })
+    }
     this.logger.log('Completed reloading MedHub personnel')
   }
 

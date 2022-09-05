@@ -33,11 +33,11 @@ const daily: AzureFunction = async (azureContext: Context, timer: any) => {
   /** Update MedHub data for active programs */
   const programService = app.get(ProgramService)
   const activePrograms = await programService.activePrograms()
-  activePrograms.forEach(async program => {
+  for (const program of activePrograms) {
     logger.log(`Reloading MedHub personnel for program: ${program.name}`)
     await programService.reloadProgramFaculty(program.id)
     await programService.reloadProgramTrainees(program.id)
-  })
+  }
 
   const tasksService = app.get(TasksService)
   await tasksService.runAllTasks()

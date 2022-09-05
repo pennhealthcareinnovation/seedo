@@ -51,7 +51,7 @@ export class TasksService {
     let unqiueTrainees = 0
     let newObservations: Prisma.observationsCreateManyInput[] = []
 
-    trainees.forEach(async trainee => {
+    trainees.forEach(trainee => {
       const traineeObs = observables.filter(obs => obs.providerId === trainee.employeeId)
       if (traineeObs.length > 0) {
         unqiueTrainees += 1
