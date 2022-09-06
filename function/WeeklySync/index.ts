@@ -6,23 +6,27 @@ import { ConfigModule } from '@nestjs/config';
 import { configuration } from '@seedo/server/config'
 import { PrismaModule } from '@seedo/server/prisma/prisma.module'
 import { ObserveModule } from '@seedo/server/observe/observe.module'
-import { AzureContextLogger } from '../common/azureContextLogger';
 import { SyncService } from '@seedo/server/observe/sync.service';
+import { LogModule } from '@seedo/server/log/log.module';
+import { LogService } from '@seedo/server/log/log.service';
 
-@Module({
-  imports: [
-    ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
-    PrismaModule,
-    ObserveModule,
-  ]
-})
-class AppModule { }
 
 /** Email out weekly summary */
 const daily: AzureFunction = async (azureContext: Context, timer: any) => {
   azureContext.log('-- STARTED FUNCTION --')
+  @Module({
+    imports: [
+      LogModule.forRoot({ type: 'azureContext', azureContext }),
+      ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
+      PrismaModule,
+      ObserveModule,
+    ]
+  })
+  class AppModule { }
 
-  const app = await NestFactory.createApplicationContext(AppModule, { logger: new AzureContextLogger('FunctionApp', { azureContext }) })
+  const app = await NestFactory.createApplicationContext(AppModule, { bufferLogs: true })
+  app.useLogger(app.get(LogService))
+
   await app.get(SyncService).syncToMedhub()
 
   azureContext.log('-- FINISHED FUNCTION --')

@@ -7,15 +7,18 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Email, MailerService } from '../mailer/mailer.service';
 import { ObservableDefintion, ObservablesDefinitions } from './observable.definitions';
 import { ObservableService } from './observable.service';
+import { LogService } from '../log/log.service';
 
 @Injectable()
 export class SummaryService {
-  private logger = new Logger(SummaryService.name)
   constructor(
     private prismaService: PrismaService,
     private mailerService: MailerService,
-    private observableService: ObservableService
-  ) { }
+    private observableService: ObservableService,
+    private logService: LogService
+  ) {
+    this.logService.setContext(SummaryService.name)
+  }
   intro(args: any) {
     return template(`
       <mj-text align="left" font-size="20px" color="#00144D" font-family="helvetica">
@@ -110,7 +113,7 @@ export class SummaryService {
         return await this.summaryForTrainee({ traineeId: result.traineeId, startDate, endDate })
       })
     )
-    this.logger.log(`Generated ${summaries.length} trainee summaries`)
+    this.logService.log(`Generated ${summaries.length} trainee summaries`)
 
     const sendSummaries = await Promise.all(
       summaries.map(async summary => {

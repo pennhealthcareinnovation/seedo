@@ -5,17 +5,19 @@ import { readFileSync } from 'fs'
 import { flatten, groupBy } from 'lodash';
 import { ConfigService } from '@nestjs/config';
 
+import { LogService } from '@seedo/server/log/log.service';
+
 @Injectable()
 export class ClarityService {
   config!: config
   connectionPool!: ConnectionPool
   queries!: any
 
-  private readonly logger = new Logger(ClarityService.name)
-
   constructor(
-    private configService: ConfigService
+    private configService: ConfigService,
+    private logService: LogService
   ) {
+    this.logService.setContext(ClarityService.name)
     this.config = {
       server: this.configService.getOrThrow<string>('CLARITY_HOST'),
       database: this.configService.getOrThrow<string>('CLARITY_DB'),
@@ -41,7 +43,7 @@ export class ClarityService {
       const result = await request.query(query)
       return flatten(result.recordsets)
     } catch (e) {
-      this.logger.error(e)
+      this.logService.error(e)
     }
   }
 

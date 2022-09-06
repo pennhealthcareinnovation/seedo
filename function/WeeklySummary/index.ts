@@ -8,23 +8,27 @@ import { PrismaModule } from '@seedo/server/prisma/prisma.module'
 import { ObserveModule } from '@seedo/server/observe/observe.module'
 import { SummaryService } from '@seedo/server/observe/summary.service'
 import { MailerModule } from '@seedo/server/mailer/mailer.module';
-import { AzureContextLogger } from '../common/azureContextLogger';
+import { LogModule } from '@seedo/server/log/log.module';
+import { LogService } from '@seedo/server/log/log.service';
 
-@Module({
-  imports: [
-    ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
-    PrismaModule,
-    MailerModule,
-    ObserveModule,
-  ]
-})
-class AppModule { }
 
 /** Email out weekly summary */
 const daily: AzureFunction = async (azureContext: Context, timer: any) => {
   azureContext.log('-- STARTED FUNCTION --')
 
-  const app = await NestFactory.createApplicationContext(AppModule, { logger: new AzureContextLogger('FunctionApp', { azureContext }) })
+  @Module({
+    imports: [
+      LogModule.forRoot({ type: 'azureContext', azureContext }),
+      ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
+      PrismaModule,
+      MailerModule,
+      ObserveModule,
+    ]
+  })
+  class AppModule { }
+  const app = await NestFactory.createApplicationContext(AppModule, { bufferLogs: true })
+  app.useLogger(app.get(LogService))
+
   await app.get(SummaryService).sendSummaries()
 
   azureContext.log('-- FINISHED FUNCTION --')

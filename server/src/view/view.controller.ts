@@ -3,6 +3,7 @@ import { ModuleRef } from '@nestjs/core';
 import { Request, Response } from 'express';
 
 import { IsPublicRoute } from '../auth/session.guard';
+import { LogService } from '../log/log.service';
 import { ViewService } from './view.service';
 
 @IsPublicRoute()
@@ -10,9 +11,11 @@ import { ViewService } from './view.service';
 export class ViewController {
   constructor(
     private viewService: ViewService,
-    private moduleRef: ModuleRef
-  ) { }
-  private logger = new Logger('ViewController')
+    private moduleRef: ModuleRef,
+    private logService: LogService
+  ) {
+    this.logService.setContext(ViewController.name)
+  }
 
   @Get('*')
   static(

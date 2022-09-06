@@ -5,10 +5,12 @@ import { Router } from 'express';
 import * as session from 'express-session';
 
 import { AppModule } from './app.module';
+import { LogService } from './log/log.service';
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(LogService))
   const configService = app.get<ConfigService>(ConfigService)
 
   const swaggerConfig = new DocumentBuilder()

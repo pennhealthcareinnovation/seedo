@@ -3,16 +3,18 @@ import { prisma, Prisma } from '@prisma/client';
 
 import { MedhubService } from '../external-api/medhub/medhub.service';
 import { Faculty, Resident } from '../external-api/medhub/medhub.types';
+import { LogService } from '../log/log.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProgramService {
   constructor(
     private medhubService: MedhubService,
-    private prismaService: PrismaService
-  ) {}
-
-  private readonly logger = new Logger(ProgramService.name)
+    private prismaService: PrismaService,
+    private logService: LogService
+  ) {
+    this.logService.setContext(ProgramService.name)
+  }
 
   /**
    * Get "active" programs - programs which have at least one defined task
@@ -123,7 +125,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logger.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`)
+        this.logService.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`)
       }
     }))
 
@@ -170,7 +172,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logger.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`)
+        this.logService.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`)
       }
     }))
 
