@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import next, { NextServer } from 'next/dist/server/next';
+import { LogService } from '../log/log.service';
 import { ObservableController } from '../observe/observable.controller';
 
 import { SummaryService } from '../observe/summary.service';
@@ -9,11 +10,13 @@ import { SummaryService } from '../observe/summary.service';
 export class ViewService {
   constructor(
     private summaryService: SummaryService,
-    private observableController: ObservableController
-  ) { }
+    private observableController: ObservableController,
+    private logService: LogService
+  ) {
+    this.logService.setContext(ViewService.name)
+  }
 
   private server: NextServer
-  private logger = new Logger('ViewService')
 
   async onModuleInit(): Promise<void> {
     try {
@@ -29,7 +32,7 @@ export class ViewService {
       })
       await this.server.prepare()
     } catch (error) {
-      this.logger.error(error)
+      this.logService.error(error)
     }
   }
 

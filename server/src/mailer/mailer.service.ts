@@ -6,6 +6,7 @@ import * as nodemailer from 'nodemailer'
 import { PrismaService } from '../prisma/prisma.service';
 
 import { sentEmails } from '@prisma/client';
+import { LogService } from '../log/log.service';
 
 const LAYOUT_TEMPLATE = template(`
 <mjml>
@@ -35,14 +36,15 @@ export type Email = {
 
 @Injectable()
 export class MailerService {
-  private readonly logger = new Logger(MailerService.name)
   transporter!: nodemailer.Transporter
   skipEmails!: boolean
 
   constructor(
     private prismaService: PrismaService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private logService: LogService
   ) {
+    this.logService.setContext(MailerService.name)
     if (this.configService.get<boolean>('SKIP_EMAILS') == true) {
       this.skipEmails = true
     } else {
@@ -81,7 +83,7 @@ export class MailerService {
       }
     })
 
-    this.logger.log(`${this.skipEmails ? 'SKIPPED' : 'SENT'} EMAIL - ${email.to} | ${email.subject}`)
+    this.logService.log(`${this.skipEmails ? 'SKIPPED' : 'SENT'} EMAIL - ${email.to} | ${email.subject}`)
     return record
   }
 }

@@ -1,12 +1,12 @@
 import { DefaultAzureCredential } from '@azure/identity'
 import { SecretClient, parseKeyVaultSecretIdentifier } from '@azure/keyvault-secrets'
 import { AppConfigurationClient, isSecretReference, parseSecretReference } from '@azure/app-configuration'
-import { Logger } from '@nestjs/common'
 
+/**
+ * Load configuration from Azure AppConfig and Vauilt 
+ * Store a summary report of the loaded config under the key REPORT
+ * */
 export async function configuration() {
-  const credential = new DefaultAzureCredential()
-  const logger = new Logger('ConfigBoostrap')
-
   const { APP_CONFIG_FILTER, APP_CONFIG_CONNECTION } = process.env
   if (!APP_CONFIG_FILTER)
     throw ('FATAL -- APP_CONFIG_FILTER not defined!')
@@ -47,6 +47,6 @@ export async function configuration() {
     }
   }
 
-  logger.log(`Azure App Config (filters: ${APP_CONFIG_FILTER.replace(/,/g, ', ')}): ${report}`)
+  config['REPORT'] = `Azure App Config (filters: ${APP_CONFIG_FILTER.replace(/,/g, ', ')}): ${report}`
   return config
 }

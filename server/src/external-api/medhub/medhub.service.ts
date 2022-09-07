@@ -5,6 +5,7 @@ import axios from 'axios'
 import { ConfigService } from '@nestjs/config';
 
 import type { Procedure, ProcedureLog } from './medhub.types'
+import { LogService } from '@seedo/server/log/log.service';
 
 interface LogPatientProcedure {
   log: ProcedureLog,
@@ -16,13 +17,13 @@ interface LogPatientProcedure {
  * https://api-docs.medhub.com/
  */
 export class MedhubService {
-  private readonly logger = new Logger(MedhubService.name)
-
   config!: any
 
   constructor(
-    private configService: ConfigService
+    private configService: ConfigService,
+    private logService: LogService
   ) {
+    this.logService.setContext(MedhubService.name)
     this.config = {
       client_id: this.configService.getOrThrow<string>('MEDHUB_CLIENT_ID'),
       private_key: this.configService.getOrThrow<string>('MEDHUB_PRIVATE_KEY'),
@@ -34,19 +35,28 @@ export class MedhubService {
     const ts = getUnixTime(new Date())
     const verify = this.verifcationHash(request, ts)
 
-    const response = await axios.request({
-      method: 'POST',
-      url: `${this.config.base_url}/functions/api/${endpoint}`,
-      data: JSON.stringify({
-        clientID: this.config.client_id,
-        type: 'json',
-        ts,
-        verify,
-        request
+    try {
+      const response = await axios.request({
+        method: 'POST',
+        url: `${this.config.base_url}/functions/api/${endpoint}`,
+        data: JSON.stringify({
+          clientID: this.config.client_id,
+          type: 'json',
+          ts,
+          verify,
+          request
+        })
       })
-    })
 
-    return response.data
+      return response.data
+    } catch (error) {
+      this.logService.error(`
+        URL: ${error.config.url}
+        Request data: ${error.config.data} 
+        Response: ${JSON.stringify(error.response.data)}
+      `)
+      throw error
+    }
   }
 
   verifcationHash(request: string, ts: number) {

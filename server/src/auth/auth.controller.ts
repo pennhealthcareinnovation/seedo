@@ -2,14 +2,18 @@ import { Controller, Get, Logger, Req, Res } from '@nestjs/common';
 import { CurrentAdmin } from 'adminjs';
 import { Response } from 'express';
 
+import { LogService } from '../log/log.service';
 import { Request } from '../types';
 import { IsPublicRoute } from './session.guard';
 
 @IsPublicRoute()
 @Controller('auth')
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-  constructor() {}
+  constructor(
+    private logService: LogService
+  ) {
+    this.logService.setContext(AuthController.name)
+  }
 
   @Get('/login')
   async login() {
@@ -39,7 +43,7 @@ export class AuthController {
   ) {
     req.session.destroy((err: any) => {
       if (err) {
-        this.logger.error('Unable to destroy session', err)
+        this.logService.error('Unable to destroy session', err)
       }
     })
     return 'Logged out';

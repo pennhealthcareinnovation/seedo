@@ -1,18 +1,21 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { Prisma } from '@prisma/client';
 import { ObservableService } from './observable.service';
 import { ObservablesDefinitions } from './observable.definitions';
 import { PrismaService } from '../prisma/prisma.service';
+import { LogService } from '../log/log.service';
 
 
 @Injectable()
 export class TasksService {
-  private readonly logger = new Logger(TasksService.name)
   constructor(
     private observableService: ObservableService,
     private prismaService: PrismaService,
-  ) { }
+    private logService: LogService
+  ) {
+    this.logService.setContext(TasksService.name)
+  }
 
   async runAllTasks() {
     const tasks = await this.prismaService.tasks.findMany()
@@ -33,7 +36,7 @@ export class TasksService {
         }
       }
     })
-    this.logger.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName}`)
+    this.logService.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName}`)
 
     if (!ObservablesDefinitions?.[task.observableType])
       throw new Error(`Unknown observable type: ${task.observableType}`)
@@ -51,7 +54,7 @@ export class TasksService {
     let unqiueTrainees = 0
     let newObservations: Prisma.observationsCreateManyInput[] = []
 
-    trainees.forEach(async trainee => {
+    trainees.forEach(trainee => {
       const traineeObs = observables.filter(obs => obs.providerId === trainee.employeeId)
       if (traineeObs.length > 0) {
         unqiueTrainees += 1
@@ -95,7 +98,7 @@ export class TasksService {
         })
       )
     )
-    this.logger.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`)
+    this.logService.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`)
 
     return transaction
   }

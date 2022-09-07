@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { chunk } from 'lodash';
 import { setTimeout } from 'timers/promises';
 import { ConfigService } from '@nestjs/config';
+import { LogService } from '../log/log.service';
 
 /** How many observations to sync concurrently */
 const SYNC_BATCH_SIZE = 10;
@@ -30,11 +31,11 @@ export class SyncService {
   constructor(
     private medhubService: MedhubService,
     private prismaService: PrismaService,
-    private configService: ConfigService
-  ) { }
-
-  private readonly logger = new Logger(SyncService.name)
-
+    private configService: ConfigService,
+    private logService: LogService
+  ) {
+    this.logService.setContext(SyncService.name)
+  }
 
   async syncObservation(obs: fullyPopulatedObservation) {
     try {
@@ -89,12 +90,12 @@ export class SyncService {
         request
       })
 
-      this.logger.log(`synced/verified observation id: ${obs.id}, medhubProcedureId: ${obs.medhubProcedureId}, medhubLogId: ${obs.medhubLogId}, medhubPatientId: ${obs.medhubPatientId}`)
+      this.logService.log(`synced/verified observation id: ${obs.id}, medhubProcedureId: ${obs.medhubProcedureId}, medhubLogId: ${obs.medhubLogId}, medhubPatientId: ${obs.medhubPatientId}`)
 
       return obs
     } catch (e) {
 
-      this.logger.error(`error syncing observation id: ${obs.id}: ${e}`)
+      this.logService.error(`error syncing observation id: ${obs.id}: ${e}`)
       return undefined
     }
   }
@@ -136,7 +137,7 @@ export class SyncService {
       const batchResult = await Promise.all(batch.map(obs => this.syncObservation(obs)))
       synced.push(...batchResult)
 
-      this.logger.debug(`waiting ${SYNC_BATCH_DELAY_SECONDS} seconds before next batch of ${SYNC_BATCH_SIZE}`)
+      this.logService.debug(`waiting ${SYNC_BATCH_DELAY_SECONDS} seconds before next batch of ${SYNC_BATCH_SIZE}`)
       await setTimeout(SYNC_BATCH_DELAY_SECONDS * 1000)
     }
 
@@ -155,7 +156,7 @@ export class SyncService {
         })
       )
     )
-    this.logger.debug(`updated observation sync data for ${synced.length} observations`)
+    this.logService.debug(`updated observation sync data for ${synced.length} observations`)
 
     return update
   }

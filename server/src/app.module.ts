@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import AdminJS from 'adminjs';
 import { Database, Resource } from '@adminjs/prisma';
-import { ConfigModule } from '@nestjs/config';
 
-import { AppController } from './app.controller';
 import { ExternalApiModule } from './external-api/external-api.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProgramModule } from './program/program.module';
@@ -12,20 +10,28 @@ import { ObserveModule } from './observe/observe.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { SessionGuard } from './auth/session.guard';
-import { MailerService } from './mailer/mailer.service';
 import { MailerModule } from './mailer/mailer.module';
 import { configuration } from './config';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { ViewModule } from './view/view.module';
+import { DevController } from './dev/dev.controller';
+import { LogModule } from './log/log.module';
+import { ConfigModule } from '@nestjs/config';
 
 AdminJS.registerAdapter({ Resource, Database })
+
+let controllers = []
+if (process.env?.ENABLE_DEV_ROUTES == 'true') {
+  controllers.push(DevController)
+}
 
 @Module({
   imports: [
     ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
+    LogModule.forRoot({ type: 'standard' }),
     ExternalApiModule, // PCX, Epic, Clarity
     PrismaModule,
-    AdminModuleBootstrap,
+    // AdminModuleBootstrap,
     AuthModule,
     MailerModule,
 
@@ -35,11 +41,11 @@ AdminJS.registerAdapter({ Resource, Database })
 
     /** The ViewModule has a catch all * url so it should be loaded last! */
     ViewModule,
-    // RenderModule.forRootAsync(Next({ dev: true, dir: './client' }), { viewsDir: './client/pages' }),
   ],
-  controllers: [AppController],
   providers: [
     { provide: APP_GUARD, useClass: SessionGuard },
   ],
+  controllers
 })
 export class AppModule {}
+

@@ -1,15 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Injectable, Logger } from '@nestjs/common';
+import { prisma, Prisma } from '@prisma/client';
 
 import { MedhubService } from '../external-api/medhub/medhub.service';
+import { Faculty, Resident } from '../external-api/medhub/medhub.types';
+import { LogService } from '../log/log.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProgramService {
   constructor(
     private medhubService: MedhubService,
-    private prismaService: PrismaService
-  ) {}
+    private prismaService: PrismaService,
+    private logService: LogService
+  ) {
+    this.logService.setContext(ProgramService.name)
+  }
 
   /**
    * Get "active" programs - programs which have at least one defined task
@@ -82,7 +87,7 @@ export class ProgramService {
   }
 
   /**
-   * Upsert program trainees from Medhub API
+   * Upsert program faculty from Medhub API
    * @param id - internal program id, *not* medhub program id
    */
   async reloadProgramFaculty(id: number) {
@@ -90,26 +95,39 @@ export class ProgramService {
     const faculty = await this.medhubService.request({
       endpoint: 'users/faculty',
       request: { programID: program.medhubProgramId }
-    })
+    }) as Faculty[]
 
-    const newFaculty = faculty.map((facultyMember): Prisma.facultyCreateInput => ({
-      medhubUserId: facultyMember.userID,
-      email: facultyMember.email,
-      employeeId: facultyMember.employeeID,
-      lastName: facultyMember.name_last,
-      firstName: facultyMember.name_first,
-      program: { connect: { id } }
-    }))
+    /** 
+     * There is currently no way to upsert in batch outside of a transaction
+     * So instead we run through and array of upsert calls
+     * https://www.prisma.io/docs/guides/performance-and-optimization/prisma-client-transactions-guide#bulk-operations
+     * */
+    const result = await Promise.all(faculty.map(async f => {
+      try {
+        if (f.employeeID == '') {
+          throw new Error('missing employeeID')
+        }
 
-    const result = await this.prismaService.$transaction([
-      ...newFaculty.map(facultyMember =>
-        this.prismaService.faculty.upsert({
-          where: { medhubUserId: facultyMember.medhubUserId },
-          update: facultyMember,
-          create: facultyMember
+        const newFaculty: Prisma.facultyCreateInput = {
+          medhubUserId: f.userID.toString(),
+          email: f.email,
+          employeeId: f.employeeID.toString(),
+          lastName: f.name_last,
+          firstName: f.name_first,
+          program: { connect: { id } }
+        }
+
+        await this.prismaService.faculty.upsert({
+          where: { medhubUserId: newFaculty.medhubUserId },
+          create: newFaculty,
+          update: newFaculty
         })
-      )
-    ])
+      }
+
+      catch (error) {
+        this.logService.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`)
+      }
+    }))
 
     return result
   }
@@ -124,30 +142,39 @@ export class ProgramService {
     const trainees = await this.medhubService.request({
       endpoint: `users/residents`,
       request: { programID: program.medhubProgramId }
-    })
+    }) as Resident[]
 
-    const newTrainees = trainees.map((trainee): Prisma.traineesCreateInput => ({
-      medhubUserId: trainee.userID,
-      email: trainee.email,
-      employeeId: trainee.employeeID,
-      lastName: trainee.name_last,
-      firstName: trainee.name_first,
-      data: trainee,
+    /** 
+        * There is currently no way to upsert in batch outside of a transaction
+        * So instead we run through and array of upsert calls
+        * https://www.prisma.io/docs/guides/performance-and-optimization/prisma-client-transactions-guide#bulk-operations
+        * */
+    const result = await Promise.all(trainees.map(async t => {
+      try {
+        if (t.employeeID == '') {
+          throw new Error('missing employeeID')
+        }
 
-      program: {
-        connect: { id }
+        const newTrainee: Prisma.traineesCreateInput = {
+          medhubUserId: t.userID.toString(),
+          email: t.email,
+          employeeId: t.employeeID.toString(),
+          lastName: t.name_last,
+          firstName: t.name_first,
+          program: { connect: { id } }
+        }
+
+        await this.prismaService.trainees.upsert({
+          where: { medhubUserId: newTrainee.medhubUserId },
+          create: newTrainee,
+          update: newTrainee
+        })
+      }
+
+      catch (error) {
+        this.logService.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`)
       }
     }))
-
-    const result = await this.prismaService.$transaction(
-      newTrainees.map(trainee =>
-        this.prismaService.trainees.upsert({
-          where: { medhubUserId: trainee.medhubUserId },
-          create: trainee,
-          update: trainee
-        })
-      )
-    )
 
     return result
   }

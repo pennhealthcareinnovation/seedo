@@ -1,20 +1,23 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 
 import { ClarityService } from '../external-api/clarity/clarity.service';
 import { ObservableQueryResult, ObservablesDefinitions, ObservableDefintion } from './observable.definitions'
+import { LogService } from '../log/log.service';
 
 @Injectable()
 export class ObservableService {
-  private readonly logger = new Logger(ObservableService.name)
   private observables: any
 
   constructor(
     private clarityService: ClarityService,
     private prismaService: PrismaService,
+    private logService: LogService
   ) {
+    this.logService.setContext(ObservableService.name)
+
     /** Load observable definitions */
     try {
       this.observables = ObservablesDefinitions
@@ -24,7 +27,7 @@ export class ObservableService {
       })
     }
     catch (e) {
-      this.logger.error(`Error loading observable defintions: ${e}`)
+      this.logService.error(`Error loading observable defintions: ${e}`)
     }
   }
 
