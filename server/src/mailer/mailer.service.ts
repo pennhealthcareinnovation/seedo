@@ -45,7 +45,10 @@ export class MailerService {
     private logService: LogService
   ) {
     this.logService.setContext(MailerService.name)
-    if (this.configService.get<boolean>('SKIP_EMAILS') == true) {
+    if (
+      this.configService.get<boolean>('SKIP_EMAILS') == true ||
+      this.configService.get<boolean>('SKIP_EMAILS').toString().toLowerCase() == 'true'
+    ) {
       this.skipEmails = true
     } else {
       this.skipEmails = false
