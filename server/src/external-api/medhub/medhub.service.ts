@@ -23,7 +23,6 @@ export class MedhubService {
     private configService: ConfigService,
     private logService: LogService
   ) {
-    this.logService.setContext(MedhubService.name)
     this.config = {
       client_id: this.configService.getOrThrow<string>('MEDHUB_CLIENT_ID'),
       private_key: this.configService.getOrThrow<string>('MEDHUB_PRIVATE_KEY'),
@@ -47,14 +46,19 @@ export class MedhubService {
           request
         })
       })
+      this.logService.debug(`SUCCESS, HTTP: ${response.status}
+        URL: ${response.config.url}
+        Request data: ${response.config.data} 
+        Response: ${JSON.stringify(response.data)}
+      `, MedhubService.name)
 
       return response.data
     } catch (error) {
-      this.logService.error(`
+      this.logService.error(`ERROR, HTTP: ${error.response.status}
         URL: ${error.config.url}
         Request data: ${error.config.data} 
         Response: ${JSON.stringify(error.response.data)}
-      `)
+      `, MedhubService.name)
       throw error
     }
   }
