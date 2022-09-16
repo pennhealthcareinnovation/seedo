@@ -16,9 +16,8 @@ export class SummaryService {
     private mailerService: MailerService,
     private observableService: ObservableService,
     private logService: LogService
-  ) {
-    this.logService.setContext(SummaryService.name)
-  }
+  ) { }
+
   intro(args: any) {
     return template(`
       <mj-text align="left" font-size="20px" color="#00144D" font-family="helvetica">
@@ -29,8 +28,6 @@ export class SummaryService {
       <mj-text align="left" font-size="12px"font-family="helvetica">
         Hey <%= trainee.firstName %>, <br />
         <p>The below procedures have been logged based on your clinical activity over the last week.</p>
-        <p><strong>Syncing to MedHub is now live!</strong> Procedures will be synced a week after they are collected to allow time for corrections.</p>
-        <p>Please login to MedHub and let me know if you see any procedures synced that occured before the previous Saturday.</p>
       </mj-text>
       <br />
     `)(args)
@@ -102,6 +99,9 @@ export class SummaryService {
         observationDate: {
           gte: startDate,
           lte: endDate
+        },
+        trainee: {
+          active: true
         }
       },
       by: ['traineeId'],
@@ -113,7 +113,7 @@ export class SummaryService {
         return await this.summaryForTrainee({ traineeId: result.traineeId, startDate, endDate })
       })
     )
-    this.logService.log(`Generated ${summaries.length} trainee summaries`)
+    this.logService.log(`Generated ${summaries.length} trainee summaries`, SummaryService.name)
 
     const sendSummaries = await Promise.all(
       summaries.map(async summary => {

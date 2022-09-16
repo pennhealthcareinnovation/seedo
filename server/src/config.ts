@@ -25,7 +25,7 @@ export async function configuration() {
     // allow local environment variables to override cloud config values
     if (process.env?.[setting.key]) {
       config[setting.key] = process.env[setting.key]
-      report += `\n [LOCAL .ENV] ${setting.key}: ***`
+      report += `\n [LOCAL .ENV] ${setting.key}: ${process.env?.[setting.key]}`
     } else {
 
       if (isSecretReference(setting)) {

@@ -11,9 +11,7 @@ import { IsPublicRoute } from './session.guard';
 export class AuthController {
   constructor(
     private logService: LogService
-  ) {
-    this.logService.setContext(AuthController.name)
-  }
+  ) { }
 
   @Get('/login')
   async login() {
@@ -43,7 +41,7 @@ export class AuthController {
   ) {
     req.session.destroy((err: any) => {
       if (err) {
-        this.logService.error('Unable to destroy session', err)
+        this.logService.error(`Unable to destroy session: ${err}`, AuthController.name)
       }
     })
     return 'Logged out';

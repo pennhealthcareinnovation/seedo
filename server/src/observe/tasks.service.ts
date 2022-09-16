@@ -13,9 +13,7 @@ export class TasksService {
     private observableService: ObservableService,
     private prismaService: PrismaService,
     private logService: LogService
-  ) {
-    this.logService.setContext(TasksService.name)
-  }
+  ) { }
 
   async runAllTasks() {
     const tasks = await this.prismaService.tasks.findMany()
@@ -30,13 +28,13 @@ export class TasksService {
       include: {
         program: {
           include: {
-            trainees: true,
+            trainees: { where: { active: true } },
             faculty: true
           }
         }
       }
     })
-    this.logService.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName}`)
+    this.logService.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName}`, TasksService.name)
 
     if (!ObservablesDefinitions?.[task.observableType])
       throw new Error(`Unknown observable type: ${task.observableType}`)
@@ -98,7 +96,7 @@ export class TasksService {
         })
       )
     )
-    this.logService.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`)
+    this.logService.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`, TasksService.name)
 
     return transaction
   }

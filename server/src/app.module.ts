@@ -13,7 +13,6 @@ import { SessionGuard } from './auth/session.guard';
 import { MailerModule } from './mailer/mailer.module';
 import { configuration } from './config';
 import { UtilitiesModule } from './utilities/utilities.module';
-import { ViewModule } from './view/view.module';
 import { DevController } from './dev/dev.controller';
 import { LogModule } from './log/log.module';
 import { ConfigModule } from '@nestjs/config';
@@ -40,7 +39,6 @@ if (process.env?.ENABLE_DEV_ROUTES == 'true') {
     UtilitiesModule,
 
     /** The ViewModule has a catch all * url so it should be loaded last! */
-    ViewModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: SessionGuard },

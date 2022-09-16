@@ -18,13 +18,14 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "resolveJsonModule": true,
     "paths": {
-      "@seedo/server/*": ["./*"],
+      "@seedo/server/*": ["./*"]
     },
     "types": ["jest", "node", "@types/jest"],
     "typeRoots": [
       "./src/types",
       "./node_modules/@types"
-    ],
+    ]
   }
 }

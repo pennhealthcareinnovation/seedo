@@ -17,7 +17,6 @@ export class ClarityService {
     private configService: ConfigService,
     private logService: LogService
   ) {
-    this.logService.setContext(ClarityService.name)
     this.config = {
       server: this.configService.getOrThrow<string>('CLARITY_HOST'),
       database: this.configService.getOrThrow<string>('CLARITY_DB'),
@@ -43,7 +42,7 @@ export class ClarityService {
       const result = await request.query(query)
       return flatten(result.recordsets)
     } catch (e) {
-      this.logService.error(e)
+      this.logService.error(e, ClarityService.name)
     }
   }
 

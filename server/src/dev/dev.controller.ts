@@ -17,9 +17,7 @@ export class DevController {
     private syncService: SyncService,
     private programService: ProgramService,
     private logService: LogService
-  ) {
-    this.logService.setContext(DevController.name)
-  }
+  ) { }
 
   @IsPublicRoute()
   @Get('run-task')
@@ -64,7 +62,7 @@ export class DevController {
     /** Update MedHub data for active programs */
     const activePrograms = await this.programService.activePrograms()
     for (const program of activePrograms) {
-      this.logService.log(`Reloading MedHub personnel for program: ${program.name}`)
+      this.logService.log(`Reloading MedHub personnel for program: ${program.name}`, DevController.name)
       await this.programService.reloadProgramFaculty(program.id)
       await this.programService.reloadProgramTrainees(program.id)
     }

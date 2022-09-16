@@ -12,6 +12,11 @@ interface LogPatientProcedure {
   procedures: Procedure[]
 }
 
+export interface MedhubRequest {
+  endpoint: string
+  request?: any
+}
+
 @Injectable()
 /** Medhub API Service
  * https://api-docs.medhub.com/
@@ -23,7 +28,6 @@ export class MedhubService {
     private configService: ConfigService,
     private logService: LogService
   ) {
-    this.logService.setContext(MedhubService.name)
     this.config = {
       client_id: this.configService.getOrThrow<string>('MEDHUB_CLIENT_ID'),
       private_key: this.configService.getOrThrow<string>('MEDHUB_PRIVATE_KEY'),
@@ -31,7 +35,7 @@ export class MedhubService {
     }
   }
 
-  async request({ endpoint, request }: { endpoint: string, request?: any }) {
+  async request({ endpoint, request }: MedhubRequest) {
     const ts = getUnixTime(new Date())
     const verify = this.verifcationHash(request, ts)
 
@@ -47,14 +51,19 @@ export class MedhubService {
           request
         })
       })
+      this.logService.debug(`SUCCESS, HTTP: ${response.status}
+        URL: ${response.config.url}
+        Request data: ${response.config.data} 
+        Response: ${JSON.stringify(response.data)}
+      `, MedhubService.name)
 
       return response.data
     } catch (error) {
-      this.logService.error(`
+      this.logService.error(`ERROR, HTTP: ${error.response.status}
         URL: ${error.config.url}
         Request data: ${error.config.data} 
         Response: ${JSON.stringify(error.response.data)}
-      `)
+      `, MedhubService.name)
       throw error
     }
   }
