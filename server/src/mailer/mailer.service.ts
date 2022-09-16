@@ -44,7 +44,6 @@ export class MailerService {
     private configService: ConfigService,
     private logService: LogService
   ) {
-    this.logService.setContext(MailerService.name)
     if (
       this.configService.get<boolean>('SKIP_EMAILS') == true ||
       this.configService.get<boolean>('SKIP_EMAILS').toString().toLowerCase() == 'true'
@@ -86,7 +85,7 @@ export class MailerService {
       }
     })
 
-    this.logService.log(`${this.skipEmails ? 'SKIPPED' : 'SENT'} EMAIL - ${email.to} | ${email.subject}`)
+    this.logService.log(`${this.skipEmails ? 'SKIPPED' : 'SENT'} EMAIL - ${email.to} | ${email.subject}`, MailerService.name)
     return record
   }
 }

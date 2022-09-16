@@ -14,7 +14,7 @@ export class LogService extends ConsoleLogger implements OnModuleInit {
   }
 
   configReport() {
-    this.debug(this.configService.get('REPORT'))
+    this.log(this.configService.get('REPORT'), LogService.name)
   }
 
   onModuleInit() {

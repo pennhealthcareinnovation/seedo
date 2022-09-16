@@ -16,9 +16,8 @@ export class SummaryService {
     private mailerService: MailerService,
     private observableService: ObservableService,
     private logService: LogService
-  ) {
-    this.logService.setContext(SummaryService.name)
-  }
+  ) { }
+
   intro(args: any) {
     return template(`
       <mj-text align="left" font-size="20px" color="#00144D" font-family="helvetica">
@@ -111,7 +110,7 @@ export class SummaryService {
         return await this.summaryForTrainee({ traineeId: result.traineeId, startDate, endDate })
       })
     )
-    this.logService.log(`Generated ${summaries.length} trainee summaries`)
+    this.logService.log(`Generated ${summaries.length} trainee summaries`, SummaryService.name)
 
     const sendSummaries = await Promise.all(
       summaries.map(async summary => {

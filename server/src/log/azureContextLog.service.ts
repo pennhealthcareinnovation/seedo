@@ -26,8 +26,7 @@ export class AzureContextLogService extends ConsoleLogger implements OnModuleIni
   }
 
   onModuleInit() {
-    this.setContext('LogService')
-    this.debug(this?.configService?.get('REPORT'))
+    this.log(this?.configService?.get('REPORT'), AzureContextLogService.name)
   }
 
   /** Don't add color, just return the string; Azure logs don't support color */

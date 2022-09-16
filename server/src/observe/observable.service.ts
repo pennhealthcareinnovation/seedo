@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { Injectable } from '@nestjs/common';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
@@ -7,27 +8,29 @@ import { ClarityService } from '../external-api/clarity/clarity.service';
 import { ObservableQueryResult, ObservablesDefinitions, ObservableDefintion } from './observable.definitions'
 import { LogService } from '../log/log.service';
 
+interface PopulatedObservableDefintion extends ObservableDefintion {
+  query?: string
+}
+
 @Injectable()
 export class ObservableService {
-  private observables: any
+  private observables: Record<string, PopulatedObservableDefintion>
 
   constructor(
     private clarityService: ClarityService,
     private prismaService: PrismaService,
     private logService: LogService
   ) {
-    this.logService.setContext(ObservableService.name)
-
     /** Load observable definitions */
     try {
       this.observables = ObservablesDefinitions
-      Object.entries(this.observables).forEach(([type, tree]: [string, ObservableDefintion]) => {
+      Object.entries<ObservableDefintion>(this.observables).forEach(([type, tree]) => {
         const name = tree.queryFile ?? `${type}.sql`
         this.observables[type]['query'] = readFileSync(resolve(__dirname, `observables/${name}`)).toString()
       })
     }
     catch (e) {
-      this.logService.error(`Error loading observable defintions: ${e}`)
+      this.logService.error(`Error loading observable defintions: ${e}`, ObservableService.name)
     }
   }
 
@@ -44,13 +47,16 @@ export class ObservableService {
 
   }
 
-  async observationsForTrainee({ traineeId, startDate, endDate }: { traineeId: number, startDate: Date, endDate: Date }) {
+  async observationsForTrainee({ traineeId, startDate, endDate, type }: { traineeId: number, startDate: Date, endDate: Date, type?: string }) {
     const observations = await this.prismaService.observations.findMany({
       where: {
         traineeId,
         observationDate: {
           gte: startDate,
           lte: endDate
+        },
+        task: {
+          observableType: type
         }
       },
       include: {
