@@ -99,6 +99,9 @@ export class SummaryService {
         observationDate: {
           gte: startDate,
           lte: endDate
+        },
+        trainee: {
+          active: true
         }
       },
       by: ['traineeId'],

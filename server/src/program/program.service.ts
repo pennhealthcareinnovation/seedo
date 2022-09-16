@@ -12,9 +12,7 @@ export class ProgramService {
     private medhubService: MedhubService,
     private prismaService: PrismaService,
     private logService: LogService
-  ) {
-    this.logService.setContext(ProgramService.name)
-  }
+  ) { }
 
   /**
    * Get "active" programs - programs which have at least one defined task
@@ -88,21 +86,39 @@ export class ProgramService {
 
   /**
    * Upsert program faculty from Medhub API
+   * Also deactivates faculty who are no longer in the program
    * @param id - internal program id, *not* medhub program id
    */
   async reloadProgramFaculty(id: number) {
-    const program = await this.prismaService.programs.findUnique({ where: { id } })
-    const faculty = await this.medhubService.request({
+    const program = await this.prismaService.programs.findUnique({
+      where: { id },
+      include: {
+        faculty: true
+      }
+    })
+    const medhubFaculty = await this.medhubService.request({
       endpoint: 'users/faculty',
       request: { programID: program.medhubProgramId }
     }) as Faculty[]
+
+    /** Deactivate faculty who are no longer in the program */
+    const toDeactivate = program.faculty.filter(facultyMem => {
+      const search = medhubFaculty.find(f => f.userID == facultyMem.medhubUserId)
+      return search == undefined
+    })
+    await this.prismaService.$transaction(
+      toDeactivate.map(f => this.prismaService.faculty.update({
+        where: { id: f.id },
+        data: { active: false }
+      }))
+    )
 
     /** 
      * There is currently no way to upsert in batch outside of a transaction
      * So instead we run through and array of upsert calls
      * https://www.prisma.io/docs/guides/performance-and-optimization/prisma-client-transactions-guide#bulk-operations
      * */
-    const result = await Promise.all(faculty.map(async f => {
+    const result = await Promise.all(medhubFaculty.map(async f => {
       try {
         if (f.employeeID == '') {
           throw new Error('missing employeeID')
@@ -117,7 +133,7 @@ export class ProgramService {
           program: { connect: { id } }
         }
 
-        await this.prismaService.faculty.upsert({
+        this.prismaService.faculty.upsert({
           where: { medhubUserId: newFaculty.medhubUserId },
           create: newFaculty,
           update: newFaculty
@@ -125,7 +141,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logService.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`)
+        this.logService.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`, ProgramService.name)
       }
     }))
 
@@ -134,22 +150,42 @@ export class ProgramService {
 
   /**
    * Upsert program trainees from Medhub API
+   * Also deactivates trainees who are no longer in the program
    * @param id - internal program id, *not* medhub program id
    * @returns 
    */
   async reloadProgramTrainees(id: number) {
-    const program = await this.prismaService.programs.findUnique({ where: { id } })
-    const trainees = await this.medhubService.request({
+    const program = await this.prismaService.programs.findUnique({
+      where: { id },
+      include: {
+        trainees: true
+      }
+    })
+    const medhubTrainees = await this.medhubService.request({
       endpoint: `users/residents`,
       request: { programID: program.medhubProgramId }
     }) as Resident[]
+
+    /**
+     * Deactivate trainees who are no longer in the program
+     */
+    const toDeactivate = program.trainees.filter(trainee => {
+      const search = medhubTrainees.find(t => t.userID == trainee.medhubUserId)
+      return search == undefined
+    })
+    await this.prismaService.$transaction(
+      toDeactivate.map(trainee => this.prismaService.trainees.update({
+        where: { id: trainee.id },
+        data: { active: false }
+      }))
+    )
 
     /** 
         * There is currently no way to upsert in batch outside of a transaction
         * So instead we run through and array of upsert calls
         * https://www.prisma.io/docs/guides/performance-and-optimization/prisma-client-transactions-guide#bulk-operations
         * */
-    const result = await Promise.all(trainees.map(async t => {
+    const result = await Promise.all(medhubTrainees.map(async t => {
       try {
         if (t.employeeID == '') {
           throw new Error('missing employeeID')
@@ -172,7 +208,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logService.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`)
+        this.logService.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`, ProgramService.name)
       }
     }))
 

@@ -28,7 +28,7 @@ export class TasksService {
       include: {
         program: {
           include: {
-            trainees: true,
+            trainees: { where: { active: true } },
             faculty: true
           }
         }

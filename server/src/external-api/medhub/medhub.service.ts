@@ -12,6 +12,11 @@ interface LogPatientProcedure {
   procedures: Procedure[]
 }
 
+export interface MedhubRequest {
+  endpoint: string
+  request?: any
+}
+
 @Injectable()
 /** Medhub API Service
  * https://api-docs.medhub.com/
@@ -30,7 +35,7 @@ export class MedhubService {
     }
   }
 
-  async request({ endpoint, request }: { endpoint: string, request?: any }) {
+  async request({ endpoint, request }: MedhubRequest) {
     const ts = getUnixTime(new Date())
     const verify = this.verifcationHash(request, ts)
 

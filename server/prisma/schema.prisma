@@ -43,6 +43,7 @@ model trainees {
   employeeId       String   @unique() @db.VarChar(255)
   lastName        String?  @db.VarChar(255)
   firstName       String?  @db.VarChar(255)
+  active          Boolean  @default(true)
   data            Json?
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt
@@ -59,6 +60,7 @@ model faculty {
   employeeId       String   @unique() @db.VarChar(255)
   lastName        String?  @db.VarChar(255)
   firstName       String?  @db.VarChar(255)
+  active          Boolean  @default(true)
 
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt
