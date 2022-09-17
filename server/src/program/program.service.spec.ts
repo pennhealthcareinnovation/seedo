@@ -62,25 +62,24 @@ describe('ProgramService', () => {
       medhubService.request = jest.fn().mockResolvedValue([{ userID: '001' }] as Faculty[])
 
       await programService.reloadProgramFaculty(0)
-      expect(prismaService.faculty.update.mock.calls.length).toBe(1)
-      expect(prismaService.faculty.update.mock.calls[0][0].data.active).toBe(false)
+      expect(prismaService.faculty.update).toBeCalledTimes(1)
+      expect(prismaService.faculty.update).toBeCalledWith({ where: { id: 2 }, data: { active: false } })
     })
 
     /** 
      * A new Faculty with medhubUserId 003 isn't present in faculty table, add them
      * TODO: not sure why the Promise.all wrap is causing the mock calls to be empty
      */
-    xit('should add faculty missing from database', async () => {
+    it('should upsert faculty MedHub API', async () => {
+      medhubService.request = jest.fn().mockResolvedValue([{ userID: '001', employeeID: '111' }, { userID: '003', employeeID: '333' }])    
       prismaService.programs.findUnique = jest.fn().mockResolvedValue({
         id: 0,
         faculty: [
           { id: 1, medhubUserId: '001' }]
       })
-      medhubService.request = jest.fn().mockResolvedValue([{ userID: '001' }, { userID: '003' }])
 
       await programService.reloadProgramFaculty(0)
-      expect(prismaService.faculty.upsert.mock.calls.length).toBe(1)
-      expect(prismaService.faculty.upsert.mock.calls[0][0].where.medhubUserId).toBe('002')
+      expect(prismaService.faculty.upsert).toBeCalledTimes(2)
     })
   })
 
@@ -93,28 +92,23 @@ describe('ProgramService', () => {
           { id: 1, medhubUserId: '001' },
           { id: 2, medhubUserId: '002' }]
       } as Partial<programs & { trainees: Partial<trainees>[] }>)
-      medhubService.request = jest.fn().mockResolvedValue([{ userID: '001' }] as Resident[])
+      medhubService.request = jest.fn().mockResolvedValue([{ userID: '001', employeeID: '1111' }] as Resident[])
 
       await programService.reloadProgramTrainees(0)
-      expect(prismaService.trainees.update.mock.calls.length).toBe(1)
-      expect(prismaService.trainees.update.mock.calls[0][0].data.active).toBe(false)
+      expect(prismaService.trainees.update).toBeCalledTimes(1)
+      expect(prismaService.trainees.update).toBeCalledWith({ where: { id: 2 }, data: { active: false } })
     })
 
-    /**
-     * Trainee with medhubUserId 003 isn't present in trainees table, add them 
-     * TODO: not sure why the Promise.all wrap is causing the mock calls to be empty
-     * */
-    xit('should add trainees missing from database', async () => {
+    it('should upsert trainees from MedHub API', async () => {
+      medhubService.request = jest.fn().mockResolvedValue([{ userID: '001', employeeID: '111' }, { userID: '003', employeeID: '333' }])
       prismaService.programs.findUnique = jest.fn().mockResolvedValue({
         id: 0,
         trainees: [
           { id: 1, medhubUserId: '001' }]
       })
-      medhubService.request = jest.fn().mockResolvedValue([{ userID: '001' }, { userID: '003' }])
 
       await programService.reloadProgramTrainees(0)
-      expect(prismaService.trainees.upsert.mock.calls.length).toBe(1)
-      expect(prismaService.trainees.upsert.mock.calls[0][0].where.medhubUserId).toBe('002')
+      expect(prismaService.trainees.upsert).toBeCalledTimes(2)
     })
   })
 });
