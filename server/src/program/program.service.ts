@@ -133,7 +133,7 @@ export class ProgramService {
           program: { connect: { id } }
         }
 
-        this.prismaService.faculty.upsert({
+        await this.prismaService.faculty.upsert({
           where: { medhubUserId: newFaculty.medhubUserId },
           create: newFaculty,
           update: newFaculty
