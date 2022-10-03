@@ -10,8 +10,14 @@ services:
       dockerfile: ./server/Dockerfile
       target: development
     ports:
-      - ${SERVER_PORT}:${SERVER_PORT}
-      - 9229:9229
+      - target: ${SERVER_PORT}
+        published: ${SERVER_PORT}
+        protocol: tcp
+        mode: host
+      - target: 9229
+        published: 9229
+        protocol: tcp
+        mode: host
     env_file:
       - ./.env
     # environment:
@@ -22,23 +28,24 @@ services:
     tty: true
     stdin_open: true
   
-  # web:
-  #   image: seedo/web:latest
-  #   build:
-  #     context: .
-  #     dockerfile: ./web/Dockerfile
-  #     target: development
-  #   ports:
-  #     - ${WEB_PORT}:${WEB_PORT}
-  #   env_file:
-  #     - ./.env
-  #   # environment:
-  #   #   - AUTH_DISABLED=true
-  #   volumes:
-  #     # - /server/node_modules
-  #     - .:/web
-  #   tty: true
-  #   stdin_open: true
+  web:
+    image: seedo/web:latest
+    build:
+      context: .
+      dockerfile: ./web/Dockerfile
+      target: development
+    ports:
+      - target: ${WEB_PORT}
+        published: ${WEB_PORT}
+        protocol: tcp
+        mode: host
+    env_file:
+      - ./.env
+    volumes:
+      # - /web/node_modules
+      - .:/web
+    tty: true
+    stdin_open: true
 
   # database:
   #   image: postgres:14.2
@@ -50,6 +57,18 @@ services:
   #     - ./db:/var/lib/postgresql/data
   #   tty: true
   #   stdin_open: true
+
+  function-deploy:
+    image: uphschcich.azurecr.io/seedo-function-deploy:latest
+    profiles: ["function-deploy"] # exclude this from routine runs, only used for function deployment
+    build:
+      context: .
+      dockerfile: ./function/Dockerfile
+      target: deploy
+    env_file:
+      - ./.env
+    tty: true
+    stdin_open: true
 
 networks:
   default:

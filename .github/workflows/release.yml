@@ -198,6 +198,10 @@ jobs:
         AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
         AZURE_FUNCTION_APP_NAME: use2-chci-ch-seedo-dev-function
+        AZURE_APP_SERVICE_NAME: use2-chci-ch-seedo-dev-server
+        WEB_PORT: 3000
+        SERVER_PORT: 3001
+        IMAGE_TAG: dev
 
     steps:
       - name: Deploy function app
@@ -206,7 +210,7 @@ jobs:
 
   deploy_prod:
     name: Deploy (Prod)
-    needs: [ build_function ]
+    needs: [ build_function, build_server, build_web ]
     runs-on: [ self-hosted, jump ]
     
     if: github.event.release.target_commitish == 'main' # only on main branch releases
@@ -224,6 +228,10 @@ jobs:
         AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
         AZURE_FUNCTION_APP_NAME: use2-chci-ch-seedo-prod-function
+        AZURE_APP_SERVICE_NAME: use2-chci-ch-seedo-prod-server
+        WEB_PORT: 3000
+        SERVER_PORT: 3001
+        IMAGE_TAG: latest
 
     steps:
       - name: Deploy function app

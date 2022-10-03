@@ -18,7 +18,7 @@ RUN npm ci
 WORKDIR /app/server
 COPY --chown=node:node server/* .
 
-RUN npm run prisma:generate && npm run build:nest && npm run build:next
+RUN npm run prisma:generate && npm run build:nest
 
 CMD ["npm", "run", "start:debug"]
 

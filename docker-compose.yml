@@ -1,20 +1,21 @@
 version: '3.8'
 services:
   server:
-    image: uphschcich.azurecr.io/seedo-server:latest
+    image: uphschcich.azurecr.io/seedo-server:${IMAGE_TAG}
     build: 
       context: .
       dockerfile: ./server/Dockerfile
       target: production
     ports:
-      - ${SERVER_PORT}:${SERVER_PORT}
-    env_file:
-      - ./.env
+      - target: ${SERVER_PORT}
+        published: ${SERVER_PORT}
+        protocol: tcp
+        mode: host
     tty: true
     stdin_open: true
 
   web:
-    image: uphschcich.azurecr.io/seedo-web:latest
+    image: uphschcich.azurecr.io/seedo-web:${IMAGE_TAG}
     build: 
       context: .
       dockerfile: ./web/Dockerfile
@@ -24,23 +25,10 @@ services:
         published: ${WEB_PORT}
         protocol: tcp
         mode: host
-    env_file: ./.env
     tty: true
     stdin_open: true
     depends_on:
       - server
-
-  function-deploy:
-    image: uphschcich.azurecr.io/seedo-function-deploy:latest
-    profiles: ["function-deploy"] # exclude this from routine runs, only used for function deployment
-    build:
-      context: .
-      dockerfile: ./function/Dockerfile
-      target: deploy
-    env_file:
-      - ./.env
-    tty: true
-    stdin_open: true
 
 networks:
   default:
