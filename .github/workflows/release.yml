@@ -67,8 +67,8 @@ jobs:
           file: ./server/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-server:latest
-          cache-to: type=inline,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-server-cache:${{ steps.extract_branch.outputs.branch }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-server-cache:${{ steps.extract_branch.outputs.branch }},mode=max
 
   build_web:
     name: Build Web
@@ -121,8 +121,8 @@ jobs:
           file: ./web/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-web:latest
-          cache-to: type=inline,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-web-cache:${{ steps.extract_branch.outputs.branch }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-web-cache:${{ steps.extract_branch.outputs.branch }},mode=max
 
   build_function:
     name: Build Function
@@ -175,8 +175,8 @@ jobs:
           file: ./function/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy:latest
-          cache-to: type=inline,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy-cache:${{ steps.extract_branch.outputs.branch }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy-cache:${{ steps.extract_branch.outputs.branch }},mode=max
 
   deploy_dev:
     name: Deploy (Dev)
