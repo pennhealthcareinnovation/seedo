@@ -12,6 +12,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(LogService))
   const configService = app.get<ConfigService>(ConfigService)
+  app.setGlobalPrefix(configService.get<string>('API_PREFIX', 'api'))
+  app.enableCors()
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Seedo')

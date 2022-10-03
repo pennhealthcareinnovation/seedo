@@ -1,4 +1,4 @@
-import { ConsoleLogger, Injectable, OnModuleInit } from "@nestjs/common";
+import { ConsoleLogger, Injectable, type OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
 @Injectable()
@@ -9,7 +9,7 @@ export class LogService extends ConsoleLogger implements OnModuleInit {
     super()
   }
 
-  setContext(context) {
+  setContext(context: any) {
     this.context = context
   }
 

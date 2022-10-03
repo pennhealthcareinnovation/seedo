@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { connect, config, ConnectionPool, ISqlType, DateTime } from 'mssql'
+import { connect, type config, ConnectionPool, type ISqlType, DateTime } from 'mssql'
 import { resolve } from 'path'
 import { readFileSync } from 'fs'
 import { flatten, groupBy } from 'lodash';

@@ -3,9 +3,12 @@
   "private": true,
   "workspaces": [
     "server",
-    "function"
+    "function",
+    "web"
   ],
   "dependencies": {
-    "npm": "^8.5.0"
+    "@nestjs/common": "^9.0.11",
+    "npm": "^8.5.0",
+    "reflect-metadata": "^0.1.13"
   }
 }

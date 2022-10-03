@@ -1,0 +1,21 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.web.json",
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "exclude": ["src/**/__tests__/*"],
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@seedo/web/*": ["./src/*"],
+      "@seedo/server/*": ["../server/src/*"]
+    },
+    "types": [
+      "vite/client",
+      "react"
+    ],
+    "experimentalDecorators": true,
+    "importsNotUsedAsValues": "remove",
+    "jsx": "react",
+    "skipLibCheck": true
+  }
+}

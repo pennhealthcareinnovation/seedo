@@ -1,5 +1,5 @@
-import { observations } from '@prisma/client'
-import { add, Duration, startOfDay } from 'date-fns'
+import type { observations } from '@prisma/client'
+import { add, type Duration, startOfDay } from 'date-fns'
 import * as mssql from 'mssql'
 
 /** 

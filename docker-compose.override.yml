@@ -22,6 +22,24 @@ services:
     tty: true
     stdin_open: true
   
+  # web:
+  #   image: seedo/web:latest
+  #   build:
+  #     context: .
+  #     dockerfile: ./web/Dockerfile
+  #     target: development
+  #   ports:
+  #     - ${WEB_PORT}:${WEB_PORT}
+  #   env_file:
+  #     - ./.env
+  #   # environment:
+  #   #   - AUTH_DISABLED=true
+  #   volumes:
+  #     # - /server/node_modules
+  #     - .:/web
+  #   tty: true
+  #   stdin_open: true
+
   # database:
   #   image: postgres:14.2
   #   ports: 
