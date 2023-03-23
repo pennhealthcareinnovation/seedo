@@ -180,7 +180,10 @@ jobs:
 
   deploy_dev:
     name: Deploy (Dev)
-    needs: [ build_function, build_server, build_web ]
+    needs:
+      - build_function
+      - build_server
+      # - build_web
     runs-on: [ self-hosted, jump ]
     
     if: github.ref == 'refs/heads/dev'
@@ -210,7 +213,10 @@ jobs:
 
   deploy_prod:
     name: Deploy (Prod)
-    needs: [ build_function, build_server, build_web ]
+    needs:
+      - build_function
+      - build_server
+      # - build_web
     runs-on: [ self-hosted, jump ]
     
     if: github.event.release.target_commitish == 'main' # only on main branch releases
