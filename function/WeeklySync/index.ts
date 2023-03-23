@@ -9,6 +9,7 @@ import { ObserveModule } from '@seedo/server/observe/observe.module'
 import { SyncService } from '@seedo/server/observe/sync.service';
 import { LogModule } from '@seedo/server/log/log.module';
 import { LogService } from '@seedo/server/log/log.service';
+import { PrismaService } from '@seedo/server/prisma/prisma.service';
 
 
 /** Email out weekly summary */
@@ -26,8 +27,10 @@ const daily: AzureFunction = async (azureContext: Context, timer: any) => {
 
   const app = await NestFactory.createApplicationContext(AppModule, { bufferLogs: true })
   app.useLogger(app.get(LogService))
+  await app.get(PrismaService).enableShutdownHooks(app)
 
   await app.get(SyncService).syncToMedhub()
+  await app.close()
 
   azureContext.log('-- FINISHED FUNCTION --')
 }
