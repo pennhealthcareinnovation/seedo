@@ -29,11 +29,9 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.OBSERVABLES_DEPLOY_KEY }}
 
-
-      - name: Extract Branch name
+      - name: Get branch name
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
+        run: echo "branch_name=$(git branch --show-current)" >> $GITHUB_ENV
                
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -67,8 +65,8 @@ jobs:
           file: ./server/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-server-cache:${{ steps.extract_branch.outputs.branch }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-server-cache:${{ steps.extract_branch.outputs.branch }},mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-server-cache:${{ env.branch_name || 'latest' }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-server-cache:${{ env.branch_name || 'latest' }},mode=max
 
   # build_web:
   #   name: Build Web
@@ -83,11 +81,9 @@ jobs:
   #         submodules: recursive
   #         ssh-key: ${{ secrets.OBSERVABLES_DEPLOY_KEY }}
 
-
-  #     - name: Extract Branch name
-  #       shell: bash
-  #       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-  #       id: extract_branch
+      # - name: Get branch name
+      #   shell: bash
+      #   run: echo "branch_name=$(git branch --show-current)" >> $GITHUB_ENV
                
   #     - name: Set up Docker Buildx
   #       uses: docker/setup-buildx-action@v1
@@ -121,8 +117,8 @@ jobs:
   #         file: ./web/Dockerfile
   #         tags: ${{ steps.meta.outputs.tags }}
   #         labels: ${{ steps.meta.outputs.labels }}
-  #         cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-web-cache:${{ steps.extract_branch.outputs.branch }}
-  #         cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-web-cache:${{ steps.extract_branch.outputs.branch }},mode=max
+  #         cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-web-cache:${{ env.branch_name || 'latest' }}
+  #         cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-web-cache:${{ env.branch_name || 'latest' }},mode=max
 
   build_function:
     name: Build Function
@@ -137,11 +133,9 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.OBSERVABLES_DEPLOY_KEY }}
 
-
-      - name: Extract Branch name
+      - name: Get branch name
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
+        run: echo "branch_name=$(git branch --show-current)" >> $GITHUB_ENV
                
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -175,8 +169,8 @@ jobs:
           file: ./function/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy-cache:${{ steps.extract_branch.outputs.branch }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy-cache:${{ steps.extract_branch.outputs.branch }},mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy-cache:${{ env.branch_name || 'latest' }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-function-deploy-cache:${{ env.branch_name || 'latest' }},mode=max
 
   deploy_dev:
     name: Deploy (Dev)
