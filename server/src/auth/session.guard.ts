@@ -1,7 +1,7 @@
-import { CanActivate, ExecutionContext, Injectable, SetMetadata } from "@nestjs/common";
+import { type CanActivate, type ExecutionContext, Injectable, SetMetadata } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Observable } from "rxjs";
-import { Request } from "../types";
+import { type Request } from "../types";
 
 export const IS_PUBLIC_ROUTE = 'IS_PUBLIC_ROUTE';
 export const AUTH_DISABLED = process.env?.AUTH_DISABLED === 'true' ?? false;

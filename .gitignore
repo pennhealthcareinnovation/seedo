@@ -39,3 +39,4 @@ lerna-debug.log*
 **/dist/*
 db
 .next
+.htpasswd

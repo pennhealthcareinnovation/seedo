@@ -12,6 +12,7 @@ import { ProgramModule } from '@seedo/server/program/program.module';
 import { ProgramService } from '@seedo/server/program/program.service';
 import { LogModule } from '@seedo/server/log/log.module';
 import { LogService } from '@seedo/server/log/log.service';
+import { PrismaService } from '@seedo/server/prisma/prisma.service';
 
 /** Run all daily collection tasks */
 const daily: AzureFunction = async (azureContext: Context, timer: any) => {
@@ -31,6 +32,7 @@ const daily: AzureFunction = async (azureContext: Context, timer: any) => {
 
   const app = await NestFactory.createApplicationContext(AppModule, { bufferLogs: true })
   app.useLogger(app.get(LogService))
+  await app.get(PrismaService).enableShutdownHooks(app)
   const logger = app.get(LogService)
 
   /** Update MedHub data for active programs */
@@ -45,6 +47,7 @@ const daily: AzureFunction = async (azureContext: Context, timer: any) => {
 
   const tasksService = app.get(TasksService)
   await tasksService.runAllTasks()
+  await app.close()
 
   azureContext.log('-- FINISHED FUNCTION --')
 }

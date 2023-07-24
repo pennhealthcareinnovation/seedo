@@ -1,4 +1,5 @@
 import { Context } from "@azure/functions";
+// TODO: reconsider whether this should be a dependency of server - probably not
 import { ConsoleLogger, ConsoleLoggerOptions, LogLevel, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { LogService } from "./log.service";

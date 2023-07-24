@@ -48,7 +48,7 @@ model trainees {
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt
   
-  program        programs @relation(fields: [programId], references: [id])
+  program         programs @relation(fields: [programId], references: [id])
   observations    observations[]
 }
 
@@ -139,4 +139,14 @@ model sentEmails {
 
   createdAt       DateTime @db.Timestamptz(6) @default(now())
   updatedAt       DateTime @db.Timestamptz(6) @updatedAt
+}
+
+model user {
+  id            Int      @id @default(autoincrement())
+  employeeId    String   @unique() @db.VarChar(255)
+  firstName     String   @db.VarChar(255)
+  lastName      String   @db.VarChar(255)
+  email         String   @unique() @db.VarChar(320)
+  isAdmin       Boolean  @default(false)
+  
 }

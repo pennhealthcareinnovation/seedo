@@ -18,12 +18,13 @@ RUN npm ci
 WORKDIR /app/server
 COPY --chown=node:node server/* .
 
-RUN npm run prisma:generate && npm run build:nest && npm run build:next
+RUN npm run prisma:generate && npm run build:nest
 
 CMD ["npm", "run", "start:debug"]
 
 # PRODUCTION IMAGE
 FROM node:16.14 AS production
+WORKDIR /app/server
 RUN npm install -g npm@8.5.0
 USER node
 COPY --chown=node:node --from=development /app /app

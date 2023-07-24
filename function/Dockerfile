@@ -30,6 +30,7 @@ RUN npm prune --production && \
 # DEPLOY IMAGE
 FROM mcr.microsoft.com/azure-cli:2.9.1 AS deploy
 WORKDIR /root
+COPY docker-compose.yml .
 COPY --from=builder /app/function/deploy.sh \ 
                     /app/deploy_package.zip \
                     ./

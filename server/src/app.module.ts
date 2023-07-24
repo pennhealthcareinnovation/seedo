@@ -16,6 +16,7 @@ import { UtilitiesModule } from './utilities/utilities.module';
 import { DevController } from './dev/dev.controller';
 import { LogModule } from './log/log.module';
 import { ConfigModule } from '@nestjs/config';
+import { UserModule } from './user/user.module';
 
 AdminJS.registerAdapter({ Resource, Database })
 
@@ -37,6 +38,7 @@ if (process.env?.ENABLE_DEV_ROUTES == 'true') {
     ProgramModule,
     ObserveModule,
     UtilitiesModule,
+    UserModule,
 
     /** The ViewModule has a catch all * url so it should be loaded last! */
   ],

@@ -10,6 +10,7 @@ import { SummaryService } from '@seedo/server/observe/summary.service'
 import { MailerModule } from '@seedo/server/mailer/mailer.module';
 import { LogModule } from '@seedo/server/log/log.module';
 import { LogService } from '@seedo/server/log/log.service';
+import { PrismaService } from '@seedo/server/prisma/prisma.service';
 
 
 /** Email out weekly summary */
@@ -28,8 +29,10 @@ const daily: AzureFunction = async (azureContext: Context, timer: any) => {
   class AppModule { }
   const app = await NestFactory.createApplicationContext(AppModule, { bufferLogs: true })
   app.useLogger(app.get(LogService))
+  await app.get(PrismaService).enableShutdownHooks(app)
 
   await app.get(SummaryService).sendSummaries()
+  await app.close()
 
   azureContext.log('-- FINISHED FUNCTION --')
 }
