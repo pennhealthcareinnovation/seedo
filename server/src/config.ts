@@ -7,10 +7,11 @@ import { AppConfigurationClient, isSecretReference, parseSecretReference } from 
  * Store a summary report of the loaded config under the key REPORT
  * */
 export async function configuration() {
-  const { APP_CONFIG_FILTER, APP_CONFIG_CONNECTION } = process.env
+  const APP_CONFIG_FILTER = process.env?.APP_CONFIG_FILTER
   if (!APP_CONFIG_FILTER)
     throw ('FATAL -- APP_CONFIG_FILTER not defined!')
 
+  const APP_CONFIG_CONNECTION = process.env?.APP_CONFIG_CONNECTION
   if (!APP_CONFIG_CONNECTION)
     throw ('FATAL -- APP_CONFIG_CONNECTION not defined!')
 

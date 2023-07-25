@@ -21,17 +21,6 @@ export class ObservableService {
     private prismaService: PrismaService,
     private logService: LogService
   ) {
-    /** Load observable definitions */
-    try {
-      this.observables = ObservablesDefinitions
-      Object.entries<ObservableDefintion>(this.observables).forEach(([type, tree]) => {
-        const name = tree.queryFile ?? `${type}.sql`
-        this.observables[type]['query'] = readFileSync(resolve(__dirname, `observables/${name}`)).toString()
-      })
-    }
-    catch (e) {
-      this.logService.error(`Error loading observable defintions: ${e}`, ObservableService.name)
-    }
   }
 
   async run ({ type, args}: { type: string, args: any }) {
