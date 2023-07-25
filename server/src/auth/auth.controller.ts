@@ -1,5 +1,5 @@
 import { Controller, Get, Logger, Req, Res } from '@nestjs/common';
-import { CurrentAdmin } from 'adminjs';
+// import { CurrentAdmin } from 'adminjs';
 import { Response } from 'express';
 
 import { LogService } from '../log/log.service';
@@ -25,12 +25,12 @@ export class AuthController {
     @Res() res: Response,
   ) {
     /** build adminUser object to be used by adminJS */
-    const adminUser: CurrentAdmin = {
-      email: 'emeka.anyanwu@pennmedicine.upenn.edu',
-      title: 'Emeka Anyanwu'
-    }
-    req.session.adminUser = adminUser;
-    req.session.save()
+    // const adminUser: CurrentAdmin = {
+    //   email: 'emeka.anyanwu@pennmedicine.upenn.edu',
+    //   title: 'Emeka Anyanwu'
+    // }
+    // req.session.adminUser = adminUser;
+    // req.session.save()
     console.debug('session', req.session)
     res.redirect(302, '/admin');
   }
@@ -39,11 +39,11 @@ export class AuthController {
   async logout(
     @Req() req: Request,
   ) {
-    req.session.destroy((err: any) => {
-      if (err) {
-        this.logService.error(`Unable to destroy session: ${err}`, AuthController.name)
-      }
-    })
+    // req.session.destroy((err: any) => {
+    //   if (err) {
+    //     this.logService.error(`Unable to destroy session: ${err}`, AuthController.name)
+    //   }
+    // })
     return 'Logged out';
   }
 }

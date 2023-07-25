@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { prisma, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import { MedhubService } from '../external-api/medhub/medhub.service';
 import { Faculty, Resident } from '../external-api/medhub/medhub.types';
