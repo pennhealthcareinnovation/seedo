@@ -4,7 +4,6 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 
-import { ClarityService } from '../external-api/clarity/clarity.service';
 import { ObservableQueryResult, ObservablesDefinitions, ObservableDefintion } from './observable.definitions'
 import { LogService } from '../log/log.service';
 
@@ -12,24 +11,40 @@ interface PopulatedObservableDefintion extends ObservableDefintion {
   query?: string
 }
 
+export interface CollectedObservation {
+  observationType: string
+
+  providerId: string
+  providerUserId: string
+  providerIdType: string  // i.e. pennid
+
+  supervisorId: string
+  supervisorUserId: string
+  supervisorIdType: string  // i.e. pennid
+
+  ehrObservationId: string
+  ehrObservationIdType: string
+
+  observationDate: Date
+
+  patientId: string
+  patientIdType: string // i.e. "uid"
+  patientName: string
+  patientBirthDate: Date
+}
+
 @Injectable()
 export class ObservableService {
   private observables: Record<string, PopulatedObservableDefintion>
 
   constructor(
-    private clarityService: ClarityService,
     private prismaService: PrismaService,
     private logService: LogService
   ) {
   }
 
   async run ({ type, args}: { type: string, args: any }) {
-    const observable = this.observables?.[type]
-    const result = await this.clarityService.query({
-      query: observable.query,
-      vars: observable.varsFactory(args)
-    })
-    return result as ObservableQueryResult[]
+    throw new Error('Not implemented')
   }
 
   async syncObservations({ trainee }) {

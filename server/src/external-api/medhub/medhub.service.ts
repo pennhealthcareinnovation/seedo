@@ -5,7 +5,7 @@ import axios from 'axios'
 import { ConfigService } from '@nestjs/config';
 
 import type { Procedure, ProcedureLog } from './medhub.types'
-import { LogService } from '@seedo/server/log/log.service';
+import { LogService } from 'log/log.service';
 
 interface LogPatientProcedure {
   log: ProcedureLog,
