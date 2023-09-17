@@ -8,10 +8,9 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { SessionGuard } from './auth/session.guard';
 import { MailerModule } from './mailer/mailer.module';
-import { configuration } from './config';
+import { azureConfig } from './config';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { DevController } from './dev/dev.controller';
-import { LogModule } from './log/log.module';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 
@@ -23,7 +22,7 @@ if (process.env?.ENABLE_DEV_ROUTES == 'true') {
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
+    ConfigModule.forRoot({ load: [azureConfig], isGlobal: true }),
     ExternalApiModule, // PCX, Epic, Clarity
     PrismaModule,
     AuthModule,

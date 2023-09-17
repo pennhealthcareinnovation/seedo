@@ -8,7 +8,6 @@ import { Procedure, ProcedureLog, VerifyArguments } from '../external-api/medhub
 import { PrismaService } from '../prisma/prisma.service';
 import { setTimeout } from 'timers/promises';
 import { ConfigService } from '@nestjs/config';
-import { LogService } from '../log/log.service';
 
 /** 
  * How long to wait between MedHub API requests
@@ -29,11 +28,11 @@ type fullyPopulatedObservation = (
 
 @Injectable()
 export class SyncService {
+  private logger = new Logger(SyncService.name)
   constructor(
     private medhubService: MedhubService,
     private prismaService: PrismaService,
     private configService: ConfigService,
-    private logService: LogService
   ) { }
 
   async syncObservation(obs: fullyPopulatedObservation) {
@@ -90,7 +89,7 @@ export class SyncService {
       request
     })
 
-    this.logService.log(`synced/verified observation id: ${obs.id}, medhubProcedureId: ${obs.medhubProcedureId}, medhubLogId: ${obs.medhubLogId}, medhubPatientId: ${obs.medhubPatientId}`, SyncService.name)
+    this.logger.log(`synced/verified observation id: ${obs.id}, medhubProcedureId: ${obs.medhubProcedureId}, medhubLogId: ${obs.medhubLogId}, medhubPatientId: ${obs.medhubPatientId}`, SyncService.name)
 
     return obs
   }
@@ -147,7 +146,7 @@ export class SyncService {
       }
 
       catch (error) {
-        this.logService.error(`
+        this.logger.error(`
           Stopping sync batch due to error: ${error}
           Sync ${i + 1} of ${observations.length}
           Observation: ${JSON.stringify(observation)}:
@@ -156,7 +155,7 @@ export class SyncService {
       }
     }
 
-    this.logService.log(`updated observation sync data for ${synced.length} observations`, SyncService.name)
+    this.logger.log(`updated observation sync data for ${synced.length} observations`, SyncService.name)
     return synced
   }
 }

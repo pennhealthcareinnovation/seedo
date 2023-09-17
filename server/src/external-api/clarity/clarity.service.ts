@@ -5,7 +5,6 @@ import { readFileSync } from 'fs'
 import { flatten, groupBy } from 'lodash';
 import { ConfigService } from '@nestjs/config';
 
-import { LogService } from '@seedo/server/log/log.service';
 
 @Injectable()
 export class ClarityService {
@@ -15,7 +14,6 @@ export class ClarityService {
 
   constructor(
     private configService: ConfigService,
-    private logService: LogService
   ) {
   }
  

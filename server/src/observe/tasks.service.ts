@@ -1,18 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { Prisma } from '@prisma/client';
 import { ObservableService } from './observable.service';
 import { ObservablesDefinitions } from './observable.definitions';
 import { PrismaService } from '../prisma/prisma.service';
-import { LogService } from '../log/log.service';
 
 
 @Injectable()
 export class TasksService {
+  private logger = new Logger(TasksService.name)
+
   constructor(
     private observableService: ObservableService,
     private prismaService: PrismaService,
-    private logService: LogService
   ) { }
 
   async runAllTasks() {
@@ -34,16 +34,16 @@ export class TasksService {
         }
       }
     })
-    this.logService.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName}`, TasksService.name)
+    this.logger.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName}`, TasksService.name)
 
     if (!ObservablesDefinitions?.[task.observableType])
       throw new Error(`Unknown observable type: ${task.observableType}`)
 
     const startTime = process.hrtime()
     const trainees = task.program.trainees
-    const observables = await this.observableService.run({
+    const observables = await this.observableService.collect({
       type: task.observableType,
-      args: task.args
+      lookbackDays: 7
     })
     const elapsed = process.hrtime(startTime)
     const elapsedSeconds = (elapsed[0] + elapsed[1] / 1e9).toFixed(3)
@@ -96,7 +96,7 @@ export class TasksService {
         })
       )
     )
-    this.logService.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`, TasksService.name)
+    this.logger.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`, TasksService.name)
 
     return transaction
   }

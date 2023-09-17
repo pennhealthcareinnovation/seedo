@@ -1,39 +1,32 @@
-//@ts-nocheck
 import { Injectable } from '@nestjs/common';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 
-import { ClarityService } from '../external-api/clarity/clarity.service';
-import { ObservableQueryResult, ObservablesDefinitions, ObservableDefintion } from './observable.definitions'
-import { LogService } from '../log/log.service';
-
-interface PopulatedObservableDefintion extends ObservableDefintion {
-  query?: string
-}
+import { DatabricksService } from '../external-api/databricks.service';
+import { ConfigService } from '@nestjs/config';
+import { format, sub } from 'date-fns';
+import { ObservableQueryResult } from './observable.definitions';
 
 @Injectable()
 export class ObservableService {
-  private observables: Record<string, PopulatedObservableDefintion>
+  private OBSERVATION_TABLE: string
 
   constructor(
-    private clarityService: ClarityService,
+    private config: ConfigService,
     private prismaService: PrismaService,
-    private logService: LogService
+    private databricks: DatabricksService
   ) {
+    this.OBSERVATION_TABLE = this.config.getOrThrow('DATABRICKS_OBSERVATION_TABLE')
   }
 
-  async run ({ type, args}: { type: string, args: any }) {
-    const observable = this.observables?.[type]
-    const result = await this.clarityService.query({
-      query: observable.query,
-      vars: observable.varsFactory(args)
-    })
-    return result as ObservableQueryResult[]
-  }
-
-  async syncObservations({ trainee }) {
-
+  async collect({ type, lookbackDays }: { type: string, lookbackDays: number }) {
+    const endDate = new Date()
+    const startDate = sub(new Date(), { days: lookbackDays })
+    const query = `
+      select * from ${this.OBSERVATION_TABLE}
+      where observable_type = '${type}'
+      and observationDate between ${format(startDate, 'yyyy-MM-dd')} and ${format(endDate, 'yyyy-MM-dd')}
+    `
+    return await this.databricks.query(query) as ObservableQueryResult[]
   }
 
   async observationsForTrainee({ traineeId, startDate, endDate, type }: { traineeId: number, startDate: Date, endDate: Date, type?: string }) {
