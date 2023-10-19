@@ -2,7 +2,6 @@ import { Controller, Get, Logger, Req, Res } from '@nestjs/common';
 // import { CurrentAdmin } from 'adminjs';
 import { Response } from 'express';
 
-import { LogService } from '../log/log.service';
 import { Request } from '../types';
 import { IsPublicRoute } from './session.guard';
 
@@ -10,7 +9,6 @@ import { IsPublicRoute } from './session.guard';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private logService: LogService
   ) { }
 
   @Get('/login')

@@ -3,15 +3,14 @@ import { Prisma } from '@prisma/client';
 
 import { MedhubService } from '../external-api/medhub/medhub.service';
 import { Faculty, Resident } from '../external-api/medhub/medhub.types';
-import { LogService } from '../log/log.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProgramService {
+  private logger = new Logger(ProgramService.name)
   constructor(
     private medhubService: MedhubService,
     private prismaService: PrismaService,
-    private logService: LogService
   ) { }
 
   /**
@@ -141,7 +140,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logService.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`, ProgramService.name)
+        this.logger.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`, ProgramService.name)
       }
     }))
 
@@ -208,7 +207,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logService.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`, ProgramService.name)
+        this.logger.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`, ProgramService.name)
       }
     }))
 

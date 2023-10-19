@@ -1,11 +1,7 @@
-//@ts-nocheck
 import { Injectable } from '@nestjs/common';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 
 import { ObservableQueryResult, ObservablesDefinitions, ObservableDefintion } from './observable.definitions'
-import { LogService } from '../log/log.service';
 
 interface PopulatedObservableDefintion extends ObservableDefintion {
   query?: string
@@ -35,12 +31,13 @@ export interface CollectedObservation {
 
 @Injectable()
 export class ObservableService {
-  private observables: Record<string, PopulatedObservableDefintion>
+  private OBSERVATION_TABLE: string
 
   constructor(
     private prismaService: PrismaService,
-    private logService: LogService
+    private databricks: DatabricksService
   ) {
+    this.OBSERVATION_TABLE = this.config.getOrThrow('DATABRICKS_OBSERVATION_TABLE')
   }
 
   async run ({ type, args}: { type: string, args: any }) {

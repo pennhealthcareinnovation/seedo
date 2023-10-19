@@ -1,7 +1,7 @@
 import { DefaultAzureCredential } from '@azure/identity'
 import { SecretClient, parseKeyVaultSecretIdentifier } from '@azure/keyvault-secrets'
 import { AppConfigurationClient, ConfigurationSetting, isSecretReference, parseSecretReference } from '@azure/app-configuration'
-import { existsSync, statSync, readFileSync, writeFileSync } from 'fs'
+import fs from 'fs'
 
 /**
  * Load configuration from Azure AppConfig and Vauilt 
@@ -16,24 +16,27 @@ const CACHE_TTL = 1000 * 60 * 15 // 15 minutes
 export async function azureConfig() {
   if (process.env?.CACHE_AZURE_CONFIG?.toLowerCase() == 'true') {
     /** check for cache file */
-    if (existsSync(CACHE_PATH)) {
-      const cacheStat = statSync(CACHE_PATH)
+    if (fs.existsSync(CACHE_PATH)) {
+      const cacheStat = fs.statSync(CACHE_PATH)
       const cacheAge = Date.now() - cacheStat.mtimeMs
-      if (cacheAge < CACHE_TTL) {
-        const cache = readFileSync(CACHE_PATH, 'utf8')
-        const config = JSON.parse(cache)
+      const cache = fs.readFileSync(CACHE_PATH, 'utf8')
+      const config = JSON.parse(cache)
 
+      if (process.env?.OFFLINE_DEV?.toLowerCase() == 'true') {
+        config['CACHED'] = `OFFLINE_DEV enabled; using cached Azure app config from ${CACHE_PATH}`
+        config['OFFLINE_DEV'] = true
+        return config
+      } else if (cacheAge < CACHE_TTL) {
         config['CACHED'] = `Using cached Azure app config from ${CACHE_PATH} (age: ${(cacheAge / 1000).toFixed(0)} seconds)`
         return config
       }
     }
   }
 
-  const APP_CONFIG_FILTER = process.env?.APP_CONFIG_FILTER
+  const { APP_CONFIG_FILTER, APP_CONFIG_URI, } = process.env
   if (!APP_CONFIG_FILTER)
     throw ('FATAL -- APP_CONFIG_FILTER not defined!')
 
-  const APP_CONFIG_URI = process.env?.APP_CONFIG_URI
   if (!APP_CONFIG_URI)
     throw ('FATAL -- APP_CONFIG_URI not defined!')
 
@@ -81,7 +84,7 @@ export async function azureConfig() {
 
   /** store cache */
   if (process.env?.CACHE_AZURE_CONFIG?.toLowerCase() == 'true') {
-    writeFileSync(CACHE_PATH, JSON.stringify(config))
+    fs.writeFileSync(CACHE_PATH, JSON.stringify(config))
   }
 
   return config

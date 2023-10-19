@@ -5,7 +5,6 @@ import { Router } from 'express';
 import * as session from 'express-session';
 
 import { AppModule } from './app.module';
-import { LogService } from './log/log.service';
 
 
 async function bootstrap() {

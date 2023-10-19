@@ -6,17 +6,17 @@ import { SummaryService } from '../observe/summary.service';
 import { IsPublicRoute } from '../auth/session.guard';
 import { SyncService } from '../observe/sync.service';
 import { ProgramService } from '../program/program.service';
-import { LogService } from '../log/log.service';
 
 @ApiTags('Development')
 @Controller('dev')
 export class DevController {
+  private logger = new Logger(DevController.name)
+
   constructor(
     private tasksService: TasksService,
     private summaryService: SummaryService,
     private syncService: SyncService,
     private programService: ProgramService,
-    private logService: LogService
   ) { }
 
   @IsPublicRoute()
@@ -62,11 +62,11 @@ export class DevController {
     /** Update MedHub data for active programs */
     const activePrograms = await this.programService.activePrograms()
     for (const program of activePrograms) {
-      this.logService.log(`Reloading MedHub personnel for program: ${program.name}`, DevController.name)
+      this.logger.log(`Reloading MedHub personnel for program: ${program.name}`, DevController.name)
       await this.programService.reloadProgramFaculty(program.id)
       await this.programService.reloadProgramTrainees(program.id)
     }
-    this.logService.log('Completed reloading MedHub personnel')
+    this.logger.log('Completed reloading MedHub personnel')
   }
 
 }

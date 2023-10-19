@@ -11,7 +11,6 @@ import { MailerModule } from './mailer/mailer.module';
 import { azureConfig } from './config';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { DevController } from './dev/dev.controller';
-import { LogModule } from './log/log.module';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 
@@ -19,7 +18,6 @@ import { UserModule } from './user/user.module';
   imports: [
     ConfigModule.forRoot({ load: [azureConfig], isGlobal: true }),
     ExternalApiModule, // PCX, Epic, Databricks
-    LogModule.forRoot({ type: 'standard' }),
     PrismaModule,
     AuthModule,
     MailerModule,
