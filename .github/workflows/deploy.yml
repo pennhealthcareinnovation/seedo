@@ -17,7 +17,7 @@ env:
 
 jobs:
   build_server:
-    name: Build Server
+    name: build server
     runs-on: ubuntu-latest
 
     steps:
@@ -26,8 +26,7 @@ jobs:
         with:
           # NOTE: this deploy key strategy will only with a single private submodule repo.
           # The ideal solution is to use a service/machine account with a PAT: https://github.com/actions/checkout/issues/287
-          submodules: recursive
-          ssh-key: ${{ secrets.OBSERVABLES_DEPLOY_KEY }}
+          submodules: true
 
       - name: get branch name
         shell: bash
