@@ -1,34 +1,25 @@
 version: '3.8'
 services:
   server:
-    image: uphschcich.azurecr.io/seedo-server:${IMAGE_TAG}
+    env_file: ./.env
     build: 
       context: .
       dockerfile: ./server/Dockerfile
-      target: production
+      target: development
     ports:
       - target: ${SERVER_PORT}
         published: ${SERVER_PORT}
         protocol: tcp
         mode: host
-    tty: true
-    stdin_open: true
-
-  web:
-    image: uphschcich.azurecr.io/seedo-web:${IMAGE_TAG}
-    build: 
-      context: .
-      dockerfile: ./web/Dockerfile
-      target: production
-    ports:
-      - target: ${WEB_PORT}
-        published: ${WEB_PORT}
+      - target: 9229
+        published: 9229
         protocol: tcp
         mode: host
+    volumes:
+      - /app/server/node_modules
+      - .:/app
     tty: true
     stdin_open: true
-    depends_on:
-      - server
 
 networks:
   default:

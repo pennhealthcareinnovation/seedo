@@ -7,11 +7,29 @@ import { SummaryService } from './summary.service';
 import { TasksService } from './tasks.service';
 import { SyncService } from './sync.service';
 import { ObservableController } from './observable.controller';
+import { SummariesCommand, SyncCommand, TasksCommand } from './observe.commands';
+import { ProgramModule } from '../program/program.module';
 
 @Module({
-  providers: [ObservableService, SummaryService, TasksService, SyncService, ObservableController],
-  imports: [ExternalApiModule, MailerModule],
-  exports: [ObservableService, SummaryService, TasksService, SyncService, ObservableController],
+  imports: [ExternalApiModule, MailerModule, ProgramModule],
   controllers: [ObservableController],
+  providers: [
+    ObservableService,
+    SummaryService,
+    TasksService,
+    SyncService,
+    ObservableController,
+
+    TasksCommand,
+    SummariesCommand,
+    SyncCommand
+  ],
+  exports: [
+    ObservableService,
+    SummaryService,
+    TasksService,
+    SyncService,
+    ObservableController
+  ],
 })
 export class ObserveModule {}

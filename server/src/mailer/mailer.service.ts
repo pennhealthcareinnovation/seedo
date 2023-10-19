@@ -1,12 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { template } from 'lodash';
-import * as mjml2html from 'mjml'
-import * as nodemailer from 'nodemailer'
+import mjml2html from 'mjml'
+import nodemailer from 'nodemailer'
 import { PrismaService } from '../prisma/prisma.service';
 
 import { sentEmails } from '@prisma/client';
-import { LogService } from '../log/log.service';
 
 const LAYOUT_TEMPLATE = template(`
 <mjml>
@@ -38,11 +37,11 @@ export type Email = {
 export class MailerService {
   transporter!: nodemailer.Transporter
   skipEmails!: boolean
+  private logger = new Logger(MailerService.name)
 
   constructor(
     private prismaService: PrismaService,
     private configService: ConfigService,
-    private logService: LogService
   ) {
     if (
       this.configService.get<boolean>('SKIP_EMAILS') == true ||
@@ -85,7 +84,7 @@ export class MailerService {
       }
     })
 
-    this.logService.log(`${this.skipEmails ? 'SKIPPED' : 'SENT'} EMAIL - ${email.to} | ${email.subject}`, MailerService.name)
+    this.logger.log(`${this.skipEmails ? 'SKIPPED' : 'SENT'} EMAIL - ${email.to} | ${email.subject}`, MailerService.name)
     return record
   }
 }

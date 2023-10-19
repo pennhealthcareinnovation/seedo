@@ -5,7 +5,6 @@ import axios from 'axios'
 import { ConfigService } from '@nestjs/config';
 
 import type { Procedure, ProcedureLog } from './medhub.types'
-import { LogService } from '@seedo/server/log/log.service';
 
 interface LogPatientProcedure {
   log: ProcedureLog,
@@ -23,10 +22,10 @@ export interface MedhubRequest {
  */
 export class MedhubService {
   config!: any
+  private readonly logger = new Logger(MedhubService.name)
 
   constructor(
     private configService: ConfigService,
-    private logService: LogService
   ) {
     this.config = {
       client_id: this.configService.getOrThrow<string>('MEDHUB_CLIENT_ID'),
@@ -51,7 +50,7 @@ export class MedhubService {
           request
         })
       })
-      this.logService.debug(`SUCCESS, HTTP: ${response.status}
+      this.logger.debug(`SUCCESS, HTTP: ${response.status}
         URL: ${response.config.url}
         Request data: ${response.config.data} 
         Response: ${JSON.stringify(response.data)}
@@ -59,7 +58,7 @@ export class MedhubService {
 
       return response.data
     } catch (error) {
-      this.logService.error(`ERROR, HTTP: ${error.response.status}
+      this.logger.error(`ERROR, HTTP: ${error.response.status}
         URL: ${error.config.url}
         Request data: ${error.config.data} 
         Response: ${JSON.stringify(error.response.data)}

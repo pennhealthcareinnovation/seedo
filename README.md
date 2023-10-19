@@ -4,7 +4,7 @@ Automated GME (Graduate Medical Education) procedure logging interface between E
 
 ## Observables
 
-An observable is a data source that can be used to populate the observation database for trainees. Currently this is mainly MSSQL queries against Epic Clarity data warehouse. NOTE: Our Claritys queries are **not** part of this repo.
+An observable is a data source that can be used to populate the observation database for trainees. Currently this is mainly MSSQL queries against Epic Clarity data warehouse via Databricks. NOTE: Our Clarity queries are **not** part of this repo.
 
 ## Core Dependencies/Architecture
 
