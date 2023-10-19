@@ -33,7 +33,7 @@ resource vault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
   scope: resourceGroup(subscriptionId, 'use2-chci-ch-vault-rg')
 }
 
-resource job 'Microsoft.App/containerApps@2023-05-02-preview' = {
+resource job 'Microsoft.App/jobs@2023-05-01' = {
   location: location
   name: '${prefix}-${appName}-${envShortName}-job'
   tags: { environment: envShortName }
@@ -44,28 +44,9 @@ resource job 'Microsoft.App/containerApps@2023-05-02-preview' = {
     }
   }
   properties: {
-    managedEnvironmentId: containerAppEnv.id
-    configuration: {
-      ingress: {
-        external: true
-        targetPort: 3000
-        allowInsecure: false
-        traffic: [{ latestRevision: true, weight: 100 }]
-        corsPolicy: {
-          allowedOrigins: ['*']
-        }
-      }
-      registries: [{ server: containerRegistryFQDN, identity: managedIdentity.id }]
-      secrets: [
-        { name: 'postgres-password'
-          identity: managedIdentity.id
-          keyVaultUrl: '${vault.properties.vaultUri}secrets/museq-dev-postgres-password'
-        }
-        { name: 'databricks-token'
-          identity: managedIdentity.id
-          keyVaultUrl: '${vault.properties.vaultUri}secrets/museq-dev-databricks-token'
-        }
-      ]
+    environmentId: containerAppEnv.id
+    scheduleTriggerConfig: {
+      
     }
     template: {
       containers: [{
@@ -78,22 +59,10 @@ resource job 'Microsoft.App/containerApps@2023-05-02-preview' = {
         env: [
           { name: 'AZURE_CLIENT_ID', value: managedIdentity.id }
           { name: 'SERVER_PORT', value: '3000' }
-          { name: 'POSTGRES_HOST', value: 'dev-postgres.chci-ch.uphs.upenn.edu' }
-          { name: 'POSTGRES_USER', value: 'muse_queue_dev@use2-chci-ch-dev-postgres' }
-          { name: 'POSTGRES_DB', value: 'muse_queue_dev' }
-          { name: 'QUEUE_URL', value: 'https://${serverHostname}/api' }
-          { name: 'DATABRICKS_HOSTNAME', value: 'adb-5482059864227934.14.azuredatabricks.net' }
-          { name: 'DATABRICKS_HTTP_PATH', value: '/sql/1.0/warehouses/a82b3cf0b4f72b96' }
-          
-          { name: 'DATABRICKS_TOKEN', secretRef: 'databricks-token' }
-          { name: 'POSTGRES_PASSWORD', secretRef: 'postgres-password' }
+          { name: 'APP_CONFIG_URI', value: 'https://use2-chci-ch-seedo-config.azconfig.io' }
+          { name: 'APP_CONFIG_FILTER', value: '${envShortName},shared' }
         ]
       }]
-      revisionSuffix: revisionSuffix != '' ? revisionSuffix : null
-      scale: {
-        minReplicas: 1
-        maxReplicas: 1
-      }
     }
   }
 }
