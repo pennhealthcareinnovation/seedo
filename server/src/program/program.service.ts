@@ -31,6 +31,19 @@ export class ProgramService {
     return activeProgrmas
   }
 
+  /** 
+   * Update MedHub data for active programs 
+   * */
+  async reloadActivePrograms() {
+    const activePrograms = await this.activePrograms()
+    for (const program of activePrograms) {
+      this.logger.log(`Reloading MedHub personnel for program: ${program.name}`)
+      await this.reloadProgramFaculty(program.id)
+      await this.reloadProgramTrainees(program.id)
+    }
+    this.logger.log('Completed reloading MedHub personnel')
+  }
+
   /**
    * Pull and upsert programs from MedHub
    */
@@ -59,8 +72,8 @@ export class ProgramService {
   }
 
   /** Upsert program procedure types */
-  async reloadProcedureTypes(id: number) {
-    const program = await this.prismaService.programs.findUnique({ where: { id } })
+  async reloadProcedureTypes(programId: number) {
+    const program = await this.prismaService.programs.findUnique({ where: { id: programId } })
     const programProcedureTypes = await this.medhubService.request({
       endpoint: 'procedures/procedureTypes',
       request: { programID: program.medhubProgramId }
@@ -69,7 +82,7 @@ export class ProgramService {
     const newProcedureTypes = programProcedureTypes.map((procedureType): Prisma.procedureTypesCreateInput => ({
       medhubProcedureTypeId: procedureType.typeID,
       name: procedureType.procedure_name,
-      program: { connect: { id } },
+      program: { connect: { id: programId } },
     }))
 
     await this.prismaService.$transaction([

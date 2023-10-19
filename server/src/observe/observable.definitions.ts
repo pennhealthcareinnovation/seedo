@@ -48,7 +48,7 @@ export namespace ObservableTypes {
   }
 }
 export interface ObservableDefintion {
-  type: string
+  slug: string
 
   /** File name for the query, otherwise defautls to <type>.sql */
   queryFile?: string
@@ -61,7 +61,7 @@ export interface ObservableDefintion {
 
 export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
   cardiology_tte_read: {
-    type: 'cardiology_tte_read',
+    slug: 'cardiology_tte_read',
     displayName: 'Transthoracic Echo',
     ehrObservationIdType: 'accession',
     varsFactory: (args: varsFactory) => ([
@@ -71,7 +71,7 @@ export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
   },
 
   cardiology_exercise_stress_echo: {
-    type: 'cardiology_exercise_stress_echo',
+    slug: 'cardiology_exercise_stress_echo',
     displayName: 'Exercise Stress Echo',
     ehrObservationIdType: 'accession',
     varsFactory: (args: varsFactory) => ([
@@ -81,7 +81,7 @@ export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
   },
 
   cardiology_dobutamine_stress_echo: {
-    type: 'cardiology_dobutamine_stress_echo',
+    slug: 'cardiology_dobutamine_stress_echo',
     displayName: 'Dobutamine Stress Echo',
     ehrObservationIdType: 'accession',
     varsFactory: (args: varsFactory) => ([
@@ -91,7 +91,7 @@ export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
   },
 
   cardiology_tee_read: {
-    type: 'cardiology_tee_read',
+    slug: 'cardiology_tee_read',
     displayName: 'Transesophageal Echo',
     ehrObservationIdType: 'accession',
     varsFactory: (args: varsFactory) => ([

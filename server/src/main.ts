@@ -29,12 +29,12 @@ async function bootstrap() {
    * TOOD: For production this should be set to store in a database instead of in memory
    * https://github.com/voxpelli/node-connect-pg-simple
    * */
-  expressInstance.use(session({
-    secret: 'seedo',
-    name: 'seedo-session',
-    resave: true,
-    saveUninitialized: false,
-  }))
+  // expressInstance.use(session({
+  //   secret: 'seedo',
+  //   name: 'seedo-session',
+  //   resave: true,
+  //   saveUninitialized: false,
+  // }))
 
   const SERVER_PORT = configService.get('SERVER_PORT')
   await app.listen(SERVER_PORT);

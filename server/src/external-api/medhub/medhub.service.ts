@@ -22,7 +22,7 @@ export interface MedhubRequest {
  */
 export class MedhubService {
   config!: any
-  private logger = new Logger(MedhubService.name)
+  private readonly logger = new Logger(MedhubService.name)
 
   constructor(
     private configService: ConfigService,

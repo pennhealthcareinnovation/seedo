@@ -1,26 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { sub } from 'date-fns';
-
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+
 import { CollectedObservation, ObservableService } from './observable.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { LogService } from '../log/log.service';
-import { DatabricksService } from '../external-api/databricks/databricks.service';
-import { ConfigService } from '@nestjs/config';
+import { ObservablesDefinitions } from './observable.definitions';
+import { format, sub } from 'date-fns';
 
 @Injectable()
 export class TasksService {
-  private observationTable: string
-
   constructor(
     private observableService: ObservableService,
     private prisma: PrismaService,
-    private logService: LogService,
-    private databricks: DatabricksService,
-    private config: ConfigService
-  ) {
-    this.observationTable = this.config.getOrThrow<string>('DATABRICKS_OBSERVATION_TABLE')
-  }
+  ) {}
+
+  private logger = new Logger(TasksService.name)
 
   async runAllTasks() {
     const tasks = await this.prisma.tasks.findMany()
@@ -41,30 +34,26 @@ export class TasksService {
         }
       }
     })
-    this.logService.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${task.observableType}`, TasksService.name)
+    this.logger.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName}`, TasksService.name)
+
+    if (!ObservablesDefinitions?.[task.observableType])
+      throw new Error(`Unknown observable type: ${task.observableType}`)
 
     const startTime = process.hrtime()
     const trainees = task.program.trainees
     let unqiueTrainees = 0
     let newObservations: Prisma.observationsCreateManyInput[] = []
-    const currentDate = new Date()
 
-    const queryString = `
-      select *
-      from ${this.observationTable} 
-      where
-        observationType = '${task.observableType}'
-        and observationDate >= '${(sub(currentDate, { days: lookbackDays ?? 7})).toISOString()}'
-        and observationDate <= '${currentDate.toISOString()}'
-    `
-
-    await this.databricks.queryChunks({
-      queryString,
-      chunkSize: 5000,
-      chunkCallback: async (chunk: CollectedObservation[]) => {
-        /** filter observations retrieved in the current chunk for our trainees */
+    const observables = await this.observableService.run({
+      slug: task.observableType,
+      args: { 
+        start_date: format(sub(new Date(), { days: lookbackDays }), 'yyyy-MM-dd'),
+        end_date: format(new Date(), 'yyyy-MM-dd')
+      },
+      chunkCallback: async (rows: CollectedObservation[]) => {
+        /** Create observations */
         trainees.forEach(trainee => {
-          const traineeObs = chunk.filter(obs => obs.providerId === trainee.employeeId)
+          const traineeObs = rows.filter(obs => obs.providerId === trainee.employeeId)
           if (traineeObs.length > 0) {
             unqiueTrainees += 1
           }
@@ -91,8 +80,7 @@ export class TasksService {
             }))
           )
         })
-        
-        /** upsert retrieved observations */
+    
         const transaction = await this.prisma.$transaction(
           newObservations.map(obs =>
             this.prisma.observations.upsert({
@@ -110,10 +98,10 @@ export class TasksService {
         )
       }
     })
-    
     const elapsed = process.hrtime(startTime)
     const elapsedSeconds = (elapsed[0] + elapsed[1] / 1e9).toFixed(3)
+    
+    this.logger.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`, TasksService.name)
 
-    this.logService.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`, TasksService.name)
   }
 }

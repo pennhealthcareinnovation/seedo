@@ -16,7 +16,7 @@ services:
         protocol: tcp
         mode: host
     volumes:
-      # - /server/node_modules
+      - /app/server/node_modules
       - .:/app
     tty: true
     stdin_open: true

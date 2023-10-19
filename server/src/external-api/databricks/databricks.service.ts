@@ -3,6 +3,12 @@ import { ConnectionOptions } from '@databricks/sql/dist/contracts/IDBSQLClient';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+export interface QueryChunks {
+  queryString: string
+  chunkSize: number
+  chunkCallback: (rows: any[]) => Promise<void>
+}
+
 @Injectable()
 export class DatabricksService {
   private readonly logger = new Logger(DatabricksService.name)
@@ -69,7 +75,7 @@ export class DatabricksService {
    * @param chunk - retrieve this many rows at a time
    * @param chunkCallback - run this function with each chunk of results
    */
-  async queryChunks({queryString, chunkSize, chunkCallback}: {queryString: string, chunkSize: number, chunkCallback: (rows: any[]) => Promise<void>}) {
+  async queryChunks({queryString, chunkSize, chunkCallback}: QueryChunks) {
     try {
       await this.client.connect(this.connectionConfig)
       const session = await this.client.openSession()

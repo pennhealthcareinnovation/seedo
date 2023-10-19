@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { template } from 'lodash';
-import * as mjml2html from 'mjml'
-import * as nodemailer from 'nodemailer'
+import mjml2html from 'mjml'
+import nodemailer from 'nodemailer'
 import { PrismaService } from '../prisma/prisma.service';
 
 import { sentEmails } from '@prisma/client';

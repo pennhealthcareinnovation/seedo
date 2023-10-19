@@ -12,12 +12,12 @@ RUN npm ci
 COPY --chown=node:node server .
 
 RUN npm run prisma:generate &&\
-    npm run build:nest
+    npm run build
 
-CMD ["npm", "run", "start:debug"]
+CMD ["npm", "run", "start"]
 
 # PRODUCTION IMAGE
-FROM node:16.14 AS production
+FROM node:18.12.1 AS production
 WORKDIR /app/server
 RUN npm install -g npm@8.5.0
 USER node
