@@ -1,11 +1,11 @@
 import { Global, Module } from '@nestjs/common';
-import { ClarityService } from './clarity/clarity.service';
 import { MedhubService } from './medhub/medhub.service';
+import { DatabricksService } from './databricks/databricks.service';
 
 @Global()
 @Module({
   imports: [],
-  providers: [ClarityService, MedhubService],
-  exports: [ClarityService, MedhubService]
+  providers: [MedhubService, DatabricksService],
+  exports: [MedhubService, DatabricksService]
 })
 export class ExternalApiModule {}

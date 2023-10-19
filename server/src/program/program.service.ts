@@ -1,17 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { prisma, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import { MedhubService } from '../external-api/medhub/medhub.service';
 import { Faculty, Resident } from '../external-api/medhub/medhub.types';
-import { LogService } from '../log/log.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProgramService {
+  private logger = new Logger(ProgramService.name)
   constructor(
     private medhubService: MedhubService,
     private prismaService: PrismaService,
-    private logService: LogService
   ) { }
 
   /**
@@ -30,6 +29,19 @@ export class ProgramService {
     const activeProgrmas = programs.filter(program => program._count.tasks > 0)
 
     return activeProgrmas
+  }
+
+  /** 
+   * Update MedHub data for active programs 
+   * */
+  async reloadActivePrograms() {
+    const activePrograms = await this.activePrograms()
+    for (const program of activePrograms) {
+      this.logger.log(`Reloading MedHub personnel for program: ${program.name}`)
+      await this.reloadProgramFaculty(program.id)
+      await this.reloadProgramTrainees(program.id)
+    }
+    this.logger.log('Completed reloading MedHub personnel')
   }
 
   /**
@@ -60,8 +72,8 @@ export class ProgramService {
   }
 
   /** Upsert program procedure types */
-  async reloadProcedureTypes(id: number) {
-    const program = await this.prismaService.programs.findUnique({ where: { id } })
+  async reloadProcedureTypes(programId: number) {
+    const program = await this.prismaService.programs.findUnique({ where: { id: programId } })
     const programProcedureTypes = await this.medhubService.request({
       endpoint: 'procedures/procedureTypes',
       request: { programID: program.medhubProgramId }
@@ -70,7 +82,7 @@ export class ProgramService {
     const newProcedureTypes = programProcedureTypes.map((procedureType): Prisma.procedureTypesCreateInput => ({
       medhubProcedureTypeId: procedureType.typeID,
       name: procedureType.procedure_name,
-      program: { connect: { id } },
+      program: { connect: { id: programId } },
     }))
 
     await this.prismaService.$transaction([
@@ -141,7 +153,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logService.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`, ProgramService.name)
+        this.logger.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`, ProgramService.name)
       }
     }))
 
@@ -208,7 +220,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logService.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`, ProgramService.name)
+        this.logger.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`, ProgramService.name)
       }
     }))
 

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "jsx": "react",
+    "jsx": "react-jsx",
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
@@ -26,6 +26,6 @@
     "typeRoots": [
       "./src/types",
       "./node_modules/@types"
-    ]
+    ],
   }
 }
