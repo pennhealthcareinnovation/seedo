@@ -24,9 +24,8 @@ jobs:
       - name: checkout
         uses: actions/checkout@main
         with:
-          # NOTE: this deploy key strategy will only with a single private submodule repo.
-          # The ideal solution is to use a service/machine account with a PAT: https://github.com/actions/checkout/issues/287
-          submodules: true
+          token: ${{ secrets.SERVICE_ACCOUNT_PAT }}
+          submodules: recursive
 
       - name: get branch name
         shell: bash
