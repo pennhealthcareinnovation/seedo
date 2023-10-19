@@ -69,65 +69,54 @@ jobs:
           cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-server-cache:${{ env.branch_name || 'latest' }},mode=max
 
   deploy_dev:
-    name: deploy (dev)
-    needs:
-      - build_server
-    runs-on: [ self-hosted, jump ]
+    name: bicep deploy (dev)
+    needs: [ build_server ]
+    runs-on: ubuntu-latest
     
     if: github.ref == 'refs/heads/dev'
-    environment: development
 
-    # NOTE: Docker must be installed on the runner
-    container:
-      image: uphschcich.azurecr.io/seedo-function-deploy:dev
-      credentials:
-        username: ${{ secrets.AZURE_CLIENT_ID }}
-        password: ${{ secrets.AZURE_CLIENT_SECRET }}
-      env:
-        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-        AZURE_FUNCTION_APP_NAME: use2-chci-ch-seedo-dev-function
-        AZURE_APP_SERVICE_NAME: use2-chci-ch-seedo-dev-server
-        WEB_PORT: 3000
-        SERVER_PORT: 3001
-        IMAGE_TAG: dev
+    environment: 
+      name: development
 
     steps:
-      - name: Deploy function app
+      - name: extract vars
         shell: bash
-        run: /root/deploy.sh
+        run: |
+          echo "branch_name=$(git branch --show-current)" >> $GITHUB_ENV
+          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-  deploy_prod:
-    name: Deploy (Prod)
-    needs:
-      - build_function
-      - build_server
-      # - build_web
-    runs-on: [ self-hosted, jump ]
-    
-    if: github.event.release.target_commitish == 'main' # only on main branch releases
-    environment: production
+      - name: checkout repo
+        uses: actions/checkout@main
+        with:
+          clean: true
 
-    # NOTE: Docker must be installed on the runner
-    container:
-      image: uphschcich.azurecr.io/seedo-function-deploy:latest
-      credentials:
-        username: ${{ secrets.AZURE_CLIENT_ID }}
-        password: ${{ secrets.AZURE_CLIENT_SECRET }}
-      env:
-        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-        AZURE_FUNCTION_APP_NAME: use2-chci-ch-seedo-prod-function
-        AZURE_APP_SERVICE_NAME: use2-chci-ch-seedo-prod-server
-        WEB_PORT: 3000
-        SERVER_PORT: 3001
-        IMAGE_TAG: latest
+      - name: 'az cli login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-    steps:
-      - name: Deploy function app
-        shell: bash
-        run: /root/deploy.sh
+      - name: deploy link
+        run: echo '[ARM Deployment - actions-sha-${{ github.sha }}](https://portal.azure.com/#view/HubsExtension/DeploymentDetailsBlade/~/overview/id/subscriptions/${{ vars.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ vars.RESOURCE_GROUP }}/providers/Microsoft.Resources/deployments/actions-sha-${{ github.sha }})' >> $GITHUB_STEP_SUMMARY
+
+      - uses: azure/arm-deploy@v1
+        name: arm deploy - deploy/bicep/deploy.bicep
+        id: deploy
+        with:
+          resourceGroupName: ${{ vars.RESOURCE_GROUP }}
+          template: deploy/bicep/deploy.bicep
+          deploymentName: 'actions-sha-${{ github.sha }}'
+          parameters: >-
+            envShortName=dev
+            revisionSuffix=${{ env.short_sha }}
+            imageTag=sha-${{ github.sha }}
+            containerRegistryFQDN=${{ vars.CONTAINER_REGISTRY }}
+            containerAppEnvName=${{ vars.CONTAINER_APP_ENV_NAME }}
+
+      - name: deploy results
+        run: |
+          echo '
+          Container Revisions:
+          - server: ${{ steps.deploy.outputs.serverRevisionName }}
+          ' >> $GITHUB_STEP_SUMMARY
