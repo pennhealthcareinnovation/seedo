@@ -66,7 +66,7 @@ resource jobTasks 'Microsoft.App/jobs@2023-05-01' = {
           memory: '1Gi'
         }
         env: [
-          { name: 'AZURE_CLIENT_ID', value: managedIdentity.id }
+          { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId }
           { name: 'SERVER_PORT', value: '3000' }
           { name: 'APP_CONFIG_URI', value: 'https://use2-chci-ch-seedo-config.azconfig.io' }
           { name: 'APP_CONFIG_FILTER', value: '${envShortName},shared' }
