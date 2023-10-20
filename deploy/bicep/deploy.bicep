@@ -60,7 +60,7 @@ resource jobTasks 'Microsoft.App/jobs@2023-05-01' = {
       containers: [{
         name: 'server'
         image: '${containerRegistryFQDN}/${appName}-server:${imageTag}'
-        args: ['npm run cli:prod tasks']
+        command: ['/bin/bash', '-c', '"npm run cli:prod tasks"']
         resources: {
           cpu: json('0.5')
           memory: '1Gi'
