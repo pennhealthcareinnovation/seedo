@@ -18,8 +18,8 @@ CMD ["npm", "run", "start"]
 
 # PRODUCTION IMAGE
 FROM node:18.12.1 AS production
+
 WORKDIR /app/server
-RUN npm install -g npm@8.5.0
 USER node
 COPY --chown=node:node --from=development /app /app
 RUN npm prune --production
