@@ -28,50 +28,66 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   name: '${prefix}-${appName}-${envShortName}-identity'
 }
 
-resource vault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: '${prefix}-vault'
-  scope: resourceGroup(subscriptionId, 'use2-chci-ch-vault-rg')
-}
+var env = [
+  { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId }
+  { name: 'SERVER_PORT', value: '3000' }
+  { name: 'APP_CONFIG_URI', value: 'https://use2-chci-ch-seedo-config.azconfig.io' }
+  { name: 'APP_CONFIG_FILTER', value: '${envShortName},shared' }
+]
 
-resource jobTasks 'Microsoft.App/jobs@2023-05-01' = {
-  location: location
-  name: '${prefix}-${appName}-${envShortName}-job-tasks'
-  tags: { environment: envShortName }
-  identity: {
-    type: 'SystemAssigned, UserAssigned'
-    userAssignedIdentities: {
-      '${managedIdentity.id}': {}
-    }
+module jobTask 'modules/scheduledJob.bicep' = {
+  name: 'jobTask'
+  params: {
+    location: location
+    prefix: prefix
+    appName: appName
+    envShortName: envShortName
+    managedIdentityId: managedIdentity.id
+    containerAppEnvId: containerAppEnv.id
+    containerRegistryFQDN: containerRegistryFQDN
+    imageTag: imageTag
+    env: env
+    
+    jobName: 'tasks'
+    cronExpression: '0 12 * * *' // 8AM EST
+    command: ['/bin/bash', '-c', 'npm run cli:prod tasks']
   }
-  properties: {
-    environmentId: containerAppEnv.id
-    configuration: {
-      triggerType: 'Schedule'
-      scheduleTriggerConfig: {
-        cronExpression: '0 8 * * *'
-        parallelism: 1
-        replicaCompletionCount: 1
-      }
-      replicaTimeout: 60 * 60
-      replicaRetryLimit: 1
-      registries: [{ server: containerRegistryFQDN, identity: managedIdentity.id }]
-    }
-    template: {
-      containers: [{
-        name: 'server'
-        image: '${containerRegistryFQDN}/${appName}-server:${imageTag}'
-        command: ['/bin/bash', '-c', '"npm run cli:prod tasks"']
-        resources: {
-          cpu: json('0.5')
-          memory: '1Gi'
-        }
-        env: [
-          { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId }
-          { name: 'SERVER_PORT', value: '3000' }
-          { name: 'APP_CONFIG_URI', value: 'https://use2-chci-ch-seedo-config.azconfig.io' }
-          { name: 'APP_CONFIG_FILTER', value: '${envShortName},shared' }
-        ]
-      }]
-    }
+} 
+
+module summariesTask 'modules/scheduledJob.bicep' = {
+  name: 'summariesTask'
+  params: {
+    location: location
+    prefix: prefix
+    appName: appName
+    envShortName: envShortName
+    managedIdentityId: managedIdentity.id
+    containerAppEnvId: containerAppEnv.id
+    containerRegistryFQDN: containerRegistryFQDN
+    imageTag: imageTag
+    env: env
+    
+    jobName: 'summaries'
+    cronExpression: '0 14 * * 6' // Saturday 10AM EST
+    command: ['/bin/bash', '-c', 'npm run cli:prod summaries']
   }
-}
+} 
+
+module syncTask 'modules/scheduledJob.bicep' = {
+  name: 'syncTask'
+  params: {
+    location: location
+    prefix: prefix
+    appName: appName
+    envShortName: envShortName
+    managedIdentityId: managedIdentity.id
+    containerAppEnvId: containerAppEnv.id
+    containerRegistryFQDN: containerRegistryFQDN
+    imageTag: imageTag
+    env: env
+    
+    jobName: 'sync'
+    cronExpression: '0 12 * * 6' // Saturday 8AM EST
+    command: ['/bin/bash', '-c', 'npm run cli:prod sync']
+  }
+} 
