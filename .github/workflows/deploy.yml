@@ -111,7 +111,6 @@ jobs:
           deploymentName: 'actions-sha-${{ github.sha }}'
           parameters: >-
             envShortName=dev
-            revisionSuffix=${{ env.short_sha }}
             imageTag=sha-${{ github.sha }}
             containerRegistryFQDN=${{ vars.CONTAINER_REGISTRY }}
             containerAppEnvName=${{ vars.CONTAINER_APP_ENV_NAME }}
