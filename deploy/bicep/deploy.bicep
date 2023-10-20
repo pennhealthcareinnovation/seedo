@@ -33,9 +33,9 @@ resource vault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
   scope: resourceGroup(subscriptionId, 'use2-chci-ch-vault-rg')
 }
 
-resource job 'Microsoft.App/jobs@2023-05-01' = {
+resource jobTasks 'Microsoft.App/jobs@2023-05-01' = {
   location: location
-  name: '${prefix}-${appName}-${envShortName}-job'
+  name: '${prefix}-${appName}-${envShortName}-job-tasks'
   tags: { environment: envShortName }
   identity: {
     type: 'SystemAssigned, UserAssigned'
@@ -45,13 +45,22 @@ resource job 'Microsoft.App/jobs@2023-05-01' = {
   }
   properties: {
     environmentId: containerAppEnv.id
-    scheduleTriggerConfig: {
-      
+    configuration: {
+      triggerType: 'Manual'
+      // scheduleTriggerConfig: {
+      //   cronExpression: '0 8 * * *'
+      //   parallelism: 1
+      //   replicaCompletionCount: 1
+      // }
+      replicaTimeout: 60 * 60
+      replicaRetryLimit: 1
+      registries: [{ server: containerRegistryFQDN, identity: managedIdentity.id }]
     }
     template: {
       containers: [{
         name: 'server'
         image: '${containerRegistryFQDN}/${appName}-server:${imageTag}'
+        command: ['npm run cli tasks']
         resources: {
           cpu: json('0.5')
           memory: '1Gi'
