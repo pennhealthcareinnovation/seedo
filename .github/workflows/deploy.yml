@@ -12,22 +12,20 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  REGISTRY: uphschcich.azurecr.io
-
 jobs:
   build_server:
-    name: Build Server
+    name: build server
     runs-on: ubuntu-latest
+
+    environment: 
+      name: development
 
     steps:
       - name: checkout
         uses: actions/checkout@main
         with:
-          # NOTE: this deploy key strategy will only with a single private submodule repo.
-          # The ideal solution is to use a service/machine account with a PAT: https://github.com/actions/checkout/issues/287
+          token: ${{ secrets.SERVICE_ACCOUNT_PAT }}
           submodules: recursive
-          ssh-key: ${{ secrets.OBSERVABLES_DEPLOY_KEY }}
 
       - name: get branch name
         shell: bash
@@ -38,18 +36,22 @@ jobs:
         with:
           install: true
 
-      - name: log into container registry
-        uses: docker/login-action@v1
+      - name: 'az cli login'
+        uses: azure/login@v1
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.AZURE_CLIENT_ID }}
-          password: ${{ secrets.AZURE_CLIENT_SECRET }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: az acr login
+        shell: bash
+        run: az acr login --name ${{ vars.CONTAINER_REGISTRY }}
 
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/seedo-server
+          images: ${{ vars.CONTAINER_REGISTRY }}/seedo-server
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -65,8 +67,8 @@ jobs:
           file: ./server/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/seedo-server-cache:${{ env.branch_name || 'latest' }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/seedo-server-cache:${{ env.branch_name || 'latest' }},mode=max
+          cache-from: type=registry,ref=${{ vars.CONTAINER_REGISTRY }}/seedo-server-cache:${{ env.branch_name || 'latest' }}
+          cache-to: type=registry,ref=${{ vars.CONTAINER_REGISTRY }}/seedo-server-cache:${{ env.branch_name || 'latest' }},mode=max
 
   deploy_dev:
     name: bicep deploy (dev)
@@ -98,18 +100,17 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: deploy link
-        run: echo '[ARM Deployment - actions-sha-${{ github.sha }}](https://portal.azure.com/#view/HubsExtension/DeploymentDetailsBlade/~/overview/id/subscriptions/${{ vars.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ vars.RESOURCE_GROUP }}/providers/Microsoft.Resources/deployments/actions-sha-${{ github.sha }})' >> $GITHUB_STEP_SUMMARY
+        run: echo 'ARM Deployment - actions-sha-${{ github.sha }}' >> $GITHUB_STEP_SUMMARY
 
       - uses: azure/arm-deploy@v1
         name: arm deploy - deploy/bicep/deploy.bicep
         id: deploy
         with:
-          resourceGroupName: ${{ vars.RESOURCE_GROUP }}
+          resourceGroupName: ${{ vars.AZURE_RESOURCE_GROUP }}
           template: deploy/bicep/deploy.bicep
           deploymentName: 'actions-sha-${{ github.sha }}'
           parameters: >-
             envShortName=dev
-            revisionSuffix=${{ env.short_sha }}
             imageTag=sha-${{ github.sha }}
             containerRegistryFQDN=${{ vars.CONTAINER_REGISTRY }}
             containerAppEnvName=${{ vars.CONTAINER_APP_ENV_NAME }}

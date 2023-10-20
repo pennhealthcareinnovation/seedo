@@ -59,13 +59,23 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' existing
   scope: resourceGroup(subscriptionId, 'use2-chci-ch-shared-rg')
 }
 
-module containerAppRole 'modules/role-assignment.bicep' = {
-  name: 'deploySpRoleAssignemnt'
+module appEnvManagedAppContributor 'modules/role-assignment.bicep' = {
+  name: 'appEnvManagedAppContributor'
   scope: resourceGroup(subscriptionId, 'use2-chci-ch-shared-rg')
   params: {
     resourceId: containerAppEnv.id
     principalId: managedIdentity.outputs.principalId
     roleId: '641177b8-a67a-45b9-a033-47bc880bb21e' // Managed Application Contributor Role
+  }
+}
+
+module appEnvContributor 'modules/role-assignment.bicep' = {
+  name: 'appEnvContributor'
+  scope: resourceGroup(subscriptionId, 'use2-chci-ch-shared-rg')
+  params: {
+    resourceId: containerAppEnv.id
+    principalId: managedIdentity.outputs.principalId
+    roleId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor
   }
 }
 
