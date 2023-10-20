@@ -121,3 +121,55 @@ jobs:
           Container Revisions:
           - server: ${{ steps.deploy.outputs.serverRevisionName }}
           ' >> $GITHUB_STEP_SUMMARY
+
+  deploy_prod:
+    name: bicep deploy (prod)
+    needs: [ build_server ]
+    runs-on: ubuntu-latest
+    
+    if: github.event.release.target_commitish == 'main' # only on main branch releases
+
+    environment: 
+      name: production
+
+    steps:
+      - name: extract vars
+        shell: bash
+        run: |
+          echo "branch_name=$(git branch --show-current)" >> $GITHUB_ENV
+          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: checkout repo
+        uses: actions/checkout@main
+        with:
+          clean: true
+
+      - name: 'az cli login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: deploy link
+        run: echo 'ARM Deployment - actions-sha-${{ github.sha }}' >> $GITHUB_STEP_SUMMARY
+
+      - uses: azure/arm-deploy@v1
+        name: arm deploy - deploy/bicep/deploy.bicep
+        id: deploy
+        with:
+          resourceGroupName: ${{ vars.AZURE_RESOURCE_GROUP }}
+          template: deploy/bicep/deploy.bicep
+          deploymentName: 'actions-sha-${{ github.sha }}'
+          parameters: >-
+            envShortName=prod
+            imageTag=sha-${{ github.sha }}
+            containerRegistryFQDN=${{ vars.CONTAINER_REGISTRY }}
+            containerAppEnvName=${{ vars.CONTAINER_APP_ENV_NAME }}
+
+      - name: deploy results
+        run: |
+          echo '
+          Container Revisions:
+          - server: ${{ steps.deploy.outputs.serverRevisionName }}
+          ' >> $GITHUB_STEP_SUMMARY
