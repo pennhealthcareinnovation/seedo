@@ -16,8 +16,8 @@ param envShortName string
 @description('The tag of the image to deploy, we\'ll use the commit sha1 as the unique image tag')
 param imageTag string = 'latest'
 
-@description('Suffix to use for container revisions e.g. use2-chci-ch-coordn8-dev-server-[revisionSuffix]. Typicall short git sha.')
-param revisionSuffix string = ''
+// @description('Suffix to use for container revisions e.g. use2-chci-ch-coordn8-dev-server-[revisionSuffix]. Typicall short git sha.')
+// param revisionSuffix string = ''
 
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' existing = {
   name: containerAppEnvName
@@ -46,12 +46,12 @@ resource jobTasks 'Microsoft.App/jobs@2023-05-01' = {
   properties: {
     environmentId: containerAppEnv.id
     configuration: {
-      triggerType: 'Manual'
-      // scheduleTriggerConfig: {
-      //   cronExpression: '0 8 * * *'
-      //   parallelism: 1
-      //   replicaCompletionCount: 1
-      // }
+      triggerType: 'Schedule'
+      scheduleTriggerConfig: {
+        cronExpression: '0 8 * * *'
+        parallelism: 1
+        replicaCompletionCount: 1
+      }
       replicaTimeout: 60 * 60
       replicaRetryLimit: 1
       registries: [{ server: containerRegistryFQDN, identity: managedIdentity.id }]
