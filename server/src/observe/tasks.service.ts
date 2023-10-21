@@ -15,9 +15,9 @@ export class TasksService {
 
   private logger = new Logger(TasksService.name)
 
-  async runAllTasks() {
+  async runAllTasks({ lookbackDays = 7 }) {
     const tasks = await this.prisma.tasks.findMany()
-    const runTasks = await Promise.all(tasks.map(async task => await this.runCollectionTask(task.id)))
+    const runTasks = await Promise.all(tasks.map(async task => await this.runCollectionTask(task.id, lookbackDays)))
     return runTasks
   }
 
@@ -34,7 +34,7 @@ export class TasksService {
         }
       }
     })
-    this.logger.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName}`, TasksService.name)
+    this.logger.log(`[TASK ${task.id}] BEGIN -- ${task.program.name} // ${ObservablesDefinitions[task.observableType].displayName} [lookbackDays: ${lookbackDays}]`)
 
     if (!ObservablesDefinitions?.[task.observableType])
       throw new Error(`Unknown observable type: ${task.observableType}`)
@@ -101,7 +101,7 @@ export class TasksService {
     const elapsed = process.hrtime(startTime)
     const elapsedSeconds = (elapsed[0] + elapsed[1] / 1e9).toFixed(3)
     
-    this.logger.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`, TasksService.name)
+    this.logger.log(`[TASK ${task.id}] END -- collected ${newObservations.length} observations for ${unqiueTrainees} trainees, collection time: ${elapsedSeconds} seconds`)
 
   }
 }
