@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 
 import { ExternalApiModule } from './external-api/external-api.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -9,8 +9,7 @@ import { SessionGuard } from './auth/session.guard';
 import { MailerModule } from './mailer/mailer.module';
 import { azureConfig } from './config';
 import { UtilitiesModule } from './utilities/utilities.module';
-import { DevController } from './dev/dev.controller';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { TasksCommand } from './observe/observe.commands';
 
@@ -32,9 +31,20 @@ import { TasksCommand } from './observe/observe.commands';
   providers: [
     { provide: APP_GUARD, useClass: SessionGuard },
   ],
-  controllers: [
-    DevController
-  ]
 })
-export class AppModule {}
+export class AppModule {
+  constructor(
+    private config: ConfigService
+  ) { }
+
+  private logger = new Logger(AppModule.name)
+
+  onModuleInit() {
+    this.logger.verbose(this.config.get('REPORT'))
+    if (this.config.get('CACHED', undefined)) {
+      this.logger.warn(this.config.get('CACHED'))
+    }
+  }
+
+}
 

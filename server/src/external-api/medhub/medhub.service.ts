@@ -54,7 +54,7 @@ export class MedhubService {
         URL: ${response.config.url}
         Request data: ${response.config.data} 
         Response: ${JSON.stringify(response.data)}
-      `, MedhubService.name)
+      `)
 
       return response.data
     } catch (error) {
@@ -62,7 +62,7 @@ export class MedhubService {
         URL: ${error.config.url}
         Request data: ${error.config.data} 
         Response: ${JSON.stringify(error.response.data)}
-      `, MedhubService.name)
+      `)
       throw error
     }
   }

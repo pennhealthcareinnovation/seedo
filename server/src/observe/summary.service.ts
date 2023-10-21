@@ -112,7 +112,7 @@ export class SummaryService {
         return await this.summaryForTrainee({ traineeId: result.traineeId, startDate, endDate })
       })
     )
-    this.logger.log(`Generated ${summaries.length} trainee summaries`, SummaryService.name)
+    this.logger.log(`Generated ${summaries.length} trainee summaries`)
 
     const sendSummaries = await Promise.all(
       summaries.map(async summary => {
