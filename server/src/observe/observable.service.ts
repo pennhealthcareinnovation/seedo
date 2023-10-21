@@ -50,7 +50,7 @@ export class ObservableService {
       })
     }
     catch (e) {
-      this.logger.error(`Error loading observable defintions: ${e}`, ObservableService.name)
+      this.logger.error(`Error loading observable defintions: ${e}`)
     }
   }
 

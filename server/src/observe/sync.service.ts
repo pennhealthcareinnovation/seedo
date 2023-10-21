@@ -89,7 +89,7 @@ export class SyncService {
       request
     })
 
-    this.logger.log(`synced/verified observation id: ${obs.id}, medhubProcedureId: ${obs.medhubProcedureId}, medhubLogId: ${obs.medhubLogId}, medhubPatientId: ${obs.medhubPatientId}`, SyncService.name)
+    this.logger.log(`synced/verified observation id: ${obs.id}, medhubProcedureId: ${obs.medhubProcedureId}, medhubLogId: ${obs.medhubLogId}, medhubPatientId: ${obs.medhubPatientId}`)
 
     return obs
   }
@@ -150,12 +150,12 @@ export class SyncService {
           Stopping sync batch due to error: ${error}
           Sync ${i + 1} of ${observations.length}
           Observation: ${JSON.stringify(observation)}:
-        `, SyncService.name)
+        `)
         break;
       }
     }
 
-    this.logger.log(`updated observation sync data for ${synced.length} observations`, SyncService.name)
+    this.logger.log(`updated observation sync data for ${synced.length} observations`)
     return synced
   }
 }

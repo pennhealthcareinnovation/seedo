@@ -153,7 +153,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logger.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`, ProgramService.name)
+        this.logger.error(`Failed to upsert faculty with MedHub user id: ${f.userID}: ${error.message}`)
       }
     }))
 
@@ -220,7 +220,7 @@ export class ProgramService {
       }
 
       catch (error) {
-        this.logger.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`, ProgramService.name)
+        this.logger.error(`Failed to upsert trainee with MedHub user id: ${t.userID}: ${error.message}`)
       }
     }))
 

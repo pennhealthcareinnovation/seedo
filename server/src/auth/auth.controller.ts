@@ -39,7 +39,7 @@ export class AuthController {
   ) {
     // req.session.destroy((err: any) => {
     //   if (err) {
-    //     this.logService.error(`Unable to destroy session: ${err}`, AuthController.name)
+    //     this.logService.error(`Unable to destroy session: ${err}`)
     //   }
     // })
     return 'Logged out';
