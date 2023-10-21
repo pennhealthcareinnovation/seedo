@@ -13,7 +13,7 @@ param command array
 
 resource jobTasks 'Microsoft.App/jobs@2023-05-01' = {
   location: location
-  name: '${prefix}-${appName}-${envShortName}-job-${jobName}'
+  name: '${prefix}-${appName}-${envShortName}-${jobName}'
   tags: { environment: envShortName }
   identity: {
     type: 'SystemAssigned, UserAssigned'

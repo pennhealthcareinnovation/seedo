@@ -67,7 +67,7 @@ module summariesTask 'modules/scheduledJob.bicep' = {
     imageTag: imageTag
     env: env
     
-    jobName: 'sum'
+    jobName: 'summaries'
     cronExpression: '0 14 * * 6' // Saturday 10AM EST
     command: ['/bin/bash', '-c', 'npm run cli:prod summaries']
   }
