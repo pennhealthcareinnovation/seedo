@@ -1,6 +1,5 @@
 import type { observations } from '@prisma/client'
 import { add, type Duration, startOfDay } from 'date-fns'
-import * as mssql from 'mssql'
 
 /** 
  * All queries must implement this interface.
@@ -56,7 +55,6 @@ export interface ObservableDefintion {
   displayName: string
   /** Type of identifier for each observation within the EHR (i.e. accession number, note id, etc.) */
   ehrObservationIdType: string
-  varsFactory?: (args: any) => any
 }
 
 export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
@@ -64,39 +62,29 @@ export const ObservablesDefinitions: Record<string, ObservableDefintion> = {
     slug: 'cardiology_tte_read',
     displayName: 'Transthoracic Echo',
     ehrObservationIdType: 'accession',
-    varsFactory: (args: varsFactory) => ([
-      { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
-      { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
-    ])
   },
 
   cardiology_exercise_stress_echo: {
     slug: 'cardiology_exercise_stress_echo',
     displayName: 'Exercise Stress Echo',
     ehrObservationIdType: 'accession',
-    varsFactory: (args: varsFactory) => ([
-      { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
-      { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
-    ])
   },
 
   cardiology_dobutamine_stress_echo: {
     slug: 'cardiology_dobutamine_stress_echo',
     displayName: 'Dobutamine Stress Echo',
     ehrObservationIdType: 'accession',
-    varsFactory: (args: varsFactory) => ([
-      { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
-      { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) }
-    ])
   },
 
   cardiology_tee_read: {
     slug: 'cardiology_tee_read',
     displayName: 'Transesophageal Echo',
     ehrObservationIdType: 'accession',
-    varsFactory: (args: varsFactory) => ([
-      { name: 'startDate', type: mssql.DateTime, value: startOfDay(add(new Date(), args?.startDateDiff ?? { days: -7 })) },
-      { name: 'endDate', type: mssql.DateTime, value: add(new Date(), args?.endDateDiff ?? {}) },
-    ])
-  }
+  },
+
+  cardiology_nuclear_stress_read: {
+    slug: 'cardiology_nuclear_stress_read',
+    displayName: 'Nuclear Stress Read',
+    ehrObservationIdType: 'accession',
+  },
 }
